@@ -123,3 +123,6 @@ scripts/build/
 scripts/__init__.py
 scripts/run_pyrpl.spec
 scripts/pyrpl.spec
+/pyrpl/fpga/out/
+/pyrpl/fpga/tight_setup_hold_pins.txt
+/pyrpl/fpga/vivado*.jou
