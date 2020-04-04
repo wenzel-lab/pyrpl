@@ -11,10 +11,10 @@ module red_pitaya_clk_div #(
     parameter DIV = 28'd100
 )(
     input clk_i,
-    output clk_o
+    output reg clk_o = 0
 );
 
-reg[27:0] counter=28'd0;
+reg[27:0] counter = 28'd0;
 // The frequency of the output clk_out
 //  = The frequency of the input clk_in divided by DIVISOR
 // For example: Fclk_in = 50Mhz, if you want to get 1Hz signal to blink LEDs
@@ -23,11 +23,10 @@ reg[27:0] counter=28'd0;
 always @(posedge clk_i)
     begin
         counter <= counter + 28'd1;
-        if (counter >=  (DIV-1))
+        if (counter >=  (DIV-1)) begin
+            clk_o <= ~clk_o;
             counter <= 28'd0;
+        end
     end
-
-assign clk_o = (counter < DIV/2)?1'b0:1'b1;
-
 endmodule
 

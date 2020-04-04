@@ -472,17 +472,17 @@ red_pitaya_scope i_scope (
 //  FADS application
 
 //wire    [14-1:0]    to_asg;
-reg DIO1_P = 1;
-wire pin_clk;
+//reg DIO1_P = 1;
+//wire pin_clk;
 
 red_pitaya_clk_div i_clk_div(
     .clk_i          (   adc_clk                     ),
-    .clk_o          (   pin_clk                     )
+    .clk_o          (   DIO1_P                     )
     );
 
-always @(posedge pin_clk) begin
-    DIO1_P <= ~DIO1_P;
-    end
+//always @(posedge pin_clk) begin
+//    DIO1_P <= ~DIO1_P;
+//    end
 
 
 //red_pitaya_fads i_fads(
