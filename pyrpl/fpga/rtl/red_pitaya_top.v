@@ -472,6 +472,7 @@ red_pitaya_scope i_scope (
 //  FADS application
 
 //wire    [14-1:0]    to_asg;
+reg DIO1_P = 1;
 
 always @(posedge adc_clk) begin
     DIO1_P <= ~DIO1_P;
