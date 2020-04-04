@@ -19,7 +19,7 @@ module red_pitaya_fads #(
     input       [ 14-1: 0]  adc_a_i         ,   // ADC data CHA
 //    input       [ 14-1: 0]  adc_b_i         ,   // ADC data CHB
 
-    output                  sort_trig           // Sorting trigger
+    output reg              sort_trig           // Sorting trigger
 );
 
 always @(posedge adc_clk_i) begin

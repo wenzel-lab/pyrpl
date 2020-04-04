@@ -126,8 +126,9 @@ module red_pitaya_top (
    input  [ 5-1: 0] vinp_i             ,  // voltages p
    input  [ 5-1: 0] vinn_i             ,  // voltages n
    // Expansion connector
-   inout  [ 8-1: 0] exp_p_io           ,
-   inout  [ 8-1: 0] exp_n_io           ,
+   output           DIO1_P             ,
+//   inout  [ 8-1: 0] exp_p_io           ,
+//   inout  [ 8-1: 0] exp_n_io           ,
    // SATA connector
    output [ 2-1: 0] daisy_p_o          ,  // line 1 is clock capable
    output [ 2-1: 0] daisy_n_o          ,
@@ -418,8 +419,8 @@ red_pitaya_hk i_hk (
   .sys_ack         (  sys_ack[0]                 )   // acknowledge signal
 );
 
-IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
-IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
+//IOBUF i_iobufp [8-1:0] (.O(exp_p_in), .IO(exp_p_io), .I(exp_p_out), .T(~exp_p_dir) );
+//IOBUF i_iobufn [8-1:0] (.O(exp_n_in), .IO(exp_n_io), .I(exp_n_out), .T(~exp_n_dir) );
 
 //---------------------------------------------------------------------------------
 //  Oscilloscope application
@@ -476,7 +477,8 @@ red_pitaya_fads i_fads(
     .adc_clk_i      (   adc_clk                     ),
     .adc_rstn_i     (   adc_rstn                    ),
     .adc_a_i        (   to_scope_a                  ),
-    .sort_trig      (   exp_p_io[1]                 )
+//    .sort_trig      (   exp_p_io[1]                 )
+    .sort_trig      (   DIO1_P                      )
     );
 
 //---------------------------------------------------------------------------------
