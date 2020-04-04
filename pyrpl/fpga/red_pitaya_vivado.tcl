@@ -98,6 +98,7 @@ read_verilog                      $path_rtl/red_pitaya_iq_block.v
 read_verilog                      $path_rtl/red_pitaya_trigger_block.v
 read_verilog                      $path_rtl/red_pitaya_prng.v
 read_verilog                      $path_rtl/red_pitaya_fads.v
+read_verilog                      $path_rtl/red_pitaya_clock_helpers.v
 
 #constraints
 read_xdc                          $path_sdc/red_pitaya.xdc

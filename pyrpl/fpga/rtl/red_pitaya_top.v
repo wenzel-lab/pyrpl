@@ -473,8 +473,14 @@ red_pitaya_scope i_scope (
 
 //wire    [14-1:0]    to_asg;
 reg DIO1_P = 1;
+wire pin_clk;
 
-always @(posedge adc_clk) begin
+red_pitaya_clk_div i_clk_div(
+    .clk_i          (   adc_clk                     ),
+    .clk_o          (   pin_clk                     )
+    );
+
+always @(posedge pin_clk) begin
     DIO1_P <= ~DIO1_P;
     end
 
