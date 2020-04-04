@@ -468,6 +468,18 @@ red_pitaya_scope i_scope (
 );
 
 //---------------------------------------------------------------------------------
+//  FADS application
+
+//wire    [14-1:0]    to_asg;
+
+red_pitaya_fads i_fads(
+    .adc_clk_i      (   adc_clk                     ),
+    .adc_rstn_i     (   adc_rstn                    ),
+    .adc_a_i        (   to_scope_a                  ),
+    .sort_trig      (   exp_p_io[1]                 )
+    );
+
+//---------------------------------------------------------------------------------
 //  DAC arbitrary signal generator
 wire    [14-1: 0] asg1phase_o;
 
