@@ -475,23 +475,23 @@ red_pitaya_scope i_scope (
 //reg DIO1_P = 1;
 //wire pin_clk;
 
-red_pitaya_clk_div i_clk_div(
-    .clk_i          (   adc_clk                     ),
-    .clk_o          (   DIO1_P                     )
-    );
+//red_pitaya_clk_div i_clk_div(
+//    .clk_i          (   adc_clk                     ),
+//    .clk_o          (   DIO1_P                     )
+//    );
 
 //always @(posedge pin_clk) begin
 //    DIO1_P <= ~DIO1_P;
 //    end
 
 
-//red_pitaya_fads i_fads(
-//    .adc_clk_i      (   adc_clk                     ),
-//    .adc_rstn_i     (   adc_rstn                    ),
-//    .adc_a_i        (   to_scope_a                  ),
-////    .sort_trig      (   exp_p_io[1]                 )
-//    .sort_trig      (   DIO1_P                      )
-//    );
+red_pitaya_fads i_fads(
+    .adc_clk_i      (   adc_clk                     ),
+    .adc_rstn_i     (   adc_rstn                    ),
+    .adc_a_i        (   to_scope_a                  ),
+//    .sort_trig      (   exp_p_io[1]                 )
+    .sort_trig      (   DIO1_P                      )
+    );
 
 //---------------------------------------------------------------------------------
 //  DAC arbitrary signal generator

@@ -11,7 +11,7 @@ by an external high voltage amplifier to sort fluorescent droplets.
 
 module red_pitaya_fads #(
     parameter RSZ = 14, // RAM size: 2^RSZ,
-    parameter low_threshold = 14'b00000000001111
+    parameter low_threshold = 14'b00001111111111
 )(
     // ADC
     input                   adc_clk_i       ,   // ADC clock
