@@ -475,21 +475,39 @@ red_pitaya_scope i_scope (
 //reg DIO1_P = 1;
 reg toggle = 1'b1;
 wire mem_test_clk;
+//wire sys_en;
+//assign sys_en = sys_wen | sys_ren;
 
 red_pitaya_clk_div i_clk_div(
     .clk_i          (   adc_clk                     ),
     .clk_o          (   mem_test_clk                )
     );
 
-always @(posedge mem_test_clk) begin
-    toggle <= ~toggle;
+red_pitaya_mem_interface_tester i_mem_tester(
+    .clk_i          (   mem_test_clk                ),
+    .state          (   DIO1_P                      ),
 
-    casez (sys_addr[19:0])
-        20'h00000 : begin sys_ack[6] <= (sys_wen | sys_ren);  sys_rdata <= {{32- 1{1'b0}}, toggle}; end
-        endcase
 
-    DIO1_P <= toggle;
-    end
+      // System bus
+    .sys_addr        (  sys_addr                   ),  // address
+    .sys_wdata       (  sys_wdata                  ),  // write data
+    .sys_sel         (  sys_sel                    ),  // write byte select
+    .sys_wen         (  sys_wen[6]                 ),  // write enable
+    .sys_ren         (  sys_ren[6]                 ),  // read enable
+    .sys_rdata       (  sys_rdata[ 6*32+31: 1*32]  ),  // read data
+    .sys_err         (  sys_err[6]                 ),  // error indicator
+    .sys_ack         (  sys_ack[6]                 )   // acknowledge signal
+    );
+
+//always @(posedge mem_test_clk) begin
+//    toggle <= ~toggle;
+//
+//    casez (sys_addr[19:0])
+//        20'h00000 : begin sys_ack[6] <= sys_en;  sys_rdata <= {{32- 1{1'b0}}, toggle}; end
+//        endcase
+//
+//    DIO1_P <= toggle;
+//    end
 
 //always @(posedge mem_test_clk) begin
 //    DIO1_P <= ~DIO1_P;

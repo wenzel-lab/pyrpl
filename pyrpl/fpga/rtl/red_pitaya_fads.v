@@ -33,3 +33,34 @@ always @(posedge adc_clk_i) begin
 end
 
 endmodule
+
+
+module red_pitaya_mem_interface_tester (
+   input clk_i,
+   output reg state,
+
+   // System bus
+   input      [ 32-1: 0] sys_addr      ,  // bus saddress
+   input      [ 32-1: 0] sys_wdata     ,  // bus write data
+   input      [  4-1: 0] sys_sel       ,  // bus write byte select
+   input                 sys_wen       ,  // bus write enable
+   input                 sys_ren       ,  // bus read enable
+   output reg [ 32-1: 0] sys_rdata     ,  // bus read data
+   output reg            sys_err       ,  // bus error indicator
+   output reg            sys_ack          // bus acknowledge signal
+);
+
+reg toggle = 1'b1;
+wire sys_en;
+assign sys_en = sys_wen | sys_ren;
+
+always @(posedge clk_i) begin
+    toggle <= ~toggle;
+
+    casez (sys_addr[19:0])
+        20'h00000 : begin sys_ack[6] <= sys_en;  sys_rdata <= {{32- 1{1'b0}}, toggle}; end
+        endcase
+
+    state <= toggle;
+    end
+endmodule
