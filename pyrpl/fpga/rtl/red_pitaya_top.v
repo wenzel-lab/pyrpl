@@ -254,9 +254,9 @@ assign sys_rdata[5*32+:32] = 32'h0;
 assign sys_err  [5       ] =  1'b0;
 assign sys_ack  [5       ] =  1'b1;
 
-assign sys_rdata[6*32+:32] = 32'h0; 
-assign sys_err  [6       ] =  1'b0;
-assign sys_ack  [6       ] =  1'b1;
+//assign sys_rdata[6*32+:32] = 32'h0;
+//assign sys_err  [6       ] =  1'b0;
+//assign sys_ack  [6       ] =  1'b1;
 
 assign sys_rdata[7*32+:32] = 32'h0; 
 assign sys_err  [7       ] =  1'b0;
@@ -473,25 +473,36 @@ red_pitaya_scope i_scope (
 
 //wire    [14-1:0]    to_asg;
 //reg DIO1_P = 1;
-//wire pin_clk;
+reg toggle = 1'b1;
+wire mem_test_clk;
 
-//red_pitaya_clk_div i_clk_div(
-//    .clk_i          (   adc_clk                     ),
-//    .clk_o          (   DIO1_P                     )
-//    );
+red_pitaya_clk_div i_clk_div(
+    .clk_i          (   adc_clk                     ),
+    .clk_o          (   mem_test_clk                )
+    );
 
-//always @(posedge pin_clk) begin
+always @(posedge mem_test_clk) begin
+    toggle <= ~toggle;
+
+    casez (sys_addr[19:0])
+        20'h00000 : begin sys_ack[6] <= (sys_wen | sys_ren);  sys_rdata <= {{32- 1{1'b0}}, toggle}; end
+        endcase
+
+    DIO1_P <= toggle;
+    end
+
+//always @(posedge mem_test_clk) begin
 //    DIO1_P <= ~DIO1_P;
 //    end
 
 
-red_pitaya_fads i_fads(
-    .adc_clk_i      (   adc_clk                     ),
-    .adc_rstn_i     (   adc_rstn                    ),
-    .adc_a_i        (   to_scope_a                  ),
-//    .sort_trig      (   exp_p_io[1]                 )
-    .sort_trig      (   DIO1_P                      )
-    );
+//red_pitaya_fads i_fads(
+//    .adc_clk_i      (   adc_clk                     ),
+//    .adc_rstn_i     (   adc_rstn                    ),
+//    .adc_a_i        (   to_scope_a                  ),
+////    .sort_trig      (   exp_p_io[1]                 )
+//    .sort_trig      (   DIO1_P                      )
+//    );
 
 //---------------------------------------------------------------------------------
 //  DAC arbitrary signal generator
