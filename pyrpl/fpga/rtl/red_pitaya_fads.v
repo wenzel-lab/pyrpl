@@ -58,7 +58,7 @@ always @(posedge clk_i) begin
     toggle <= ~toggle;
 
     casez (sys_addr[19:0])
-        20'h00000 : begin sys_ack[6] <= sys_en;  sys_rdata <= {{32- 1{1'b0}}, toggle}; end
+        20'h00000 : begin sys_ack <= sys_en;  sys_rdata <= {{32- 1{1'b0}}, toggle}; end
         endcase
 
     state <= toggle;
