@@ -494,7 +494,7 @@ red_pitaya_mem_interface_tester i_mem_tester(
     .sys_sel         (  sys_sel                    ),  // write byte select
     .sys_wen         (  sys_wen[6]                 ),  // write enable
     .sys_ren         (  sys_ren[6]                 ),  // read enable
-    .sys_rdata       (  sys_rdata[ 6*32+31: 1*32]  ),  // read data
+    .sys_rdata       (  sys_rdata[ 6*32+31: 6*32]  ),  // read data
     .sys_err         (  sys_err[6]                 ),  // error indicator
     .sys_ack         (  sys_ack[6]                 )   // acknowledge signal
     );
