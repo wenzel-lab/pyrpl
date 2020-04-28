@@ -39,4 +39,8 @@ if __name__ == '__main__':
     print("Calling Pyrpl(**%s)"%str(kwargs))
     PYRPL = Pyrpl(**kwargs)
 
+    # while True:
+    #     print(f"\r{PYRPL.rp.scope.voltage_in1}", end="")
+    # print(PYRPL.rp.fads.state)
+    # print()
     APP.exec_()

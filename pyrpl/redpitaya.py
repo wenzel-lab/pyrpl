@@ -62,7 +62,7 @@ defaultparameters = dict(
 
 
 class RedPitaya(object):
-    cls_modules = [rp.HK, rp.AMS, rp.Scope, rp.Sampler, rp.Asg0, rp.Asg1] + \
+    cls_modules = [rp.HK, rp.AMS, rp.Scope, rp.Sampler, rp.Asg0, rp.Asg1, rp.FADS] + \
                   [rp.Pwm] * 2 + [rp.Iq] * 3 + [rp.Pid] * 3 + [rp.Trig] + [ rp.IIR]
 
     def __init__(self, config=None,  # configfile is needed to store parameters. None simulates one
@@ -200,6 +200,7 @@ class RedPitaya(object):
         self.logger.info('Successfully connected to Redpitaya with hostname '
                          '%s.'%self.ssh.hostname)
         self.parent = self
+        pass
 
     def start_ssh(self, attempt=0):
         """
