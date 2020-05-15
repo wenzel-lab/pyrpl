@@ -484,8 +484,10 @@ red_pitaya_clk_div i_clk_div(
     );
 
 red_pitaya_mem_interface_tester i_mem_tester(
-    .clk_i          (   mem_test_clk                ),
+    .clk_i          (   adc_clk                     ),
+    .clk_toggle_i   (   mem_test_clk                ),
     .state          (   DIO1_P                      ),
+    .rstn_i         (   adc_rstn                    ),
 
 
       // System bus

@@ -37,6 +37,8 @@ endmodule
 
 module red_pitaya_mem_interface_tester (
    input clk_i,
+   input clk_toggle_i,
+   input rstn_i,
    output reg state,
 
    // System bus
@@ -50,18 +52,44 @@ module red_pitaya_mem_interface_tester (
    output reg            sys_ack          // bus acknowledge signal
 );
 
-reg toggle = 1'b1;
+//reg toggle = 1'b1;
+//reg toggle;
+reg toggle;
 wire sys_en;
 assign sys_en = sys_wen | sys_ren;
+wire mem_test_clk;
+//
+//reg dummy;
 
-always @(posedge clk_i) begin
-    sys_err <= 1'b0;
+always @(posedge clk_toggle_i) begin
     toggle <= ~toggle;
 
-    casez (sys_addr[19:0])
-        20'h00000 : begin sys_ack <= sys_en;  sys_rdata <= {{32- 1{1'b0}}, toggle}; end
-        endcase
-
     state <= toggle;
+    end
+
+//always @(posedge clk_i) begin
+//    if (adc_rstn_i == 1'b0) begin
+//
+//    if (sys_wen) begin
+//            if (sys_addr[19:0]==20'h00)   dummy   <= sys_wdata[     3] ;
+//        end
+//    end
+
+//always @(posedge clk_i)
+//    if (rstn_i == 1'b0) begin
+//        toggle <= 1'b0;
+//    end else if (sys_wen) begin
+//        if (sys_addr[19:0]==20'h00000)   toggle <= sys_wdata[0];
+//    end
+
+always @(posedge clk_i)
+    if (rstn_i == 1'b0) begin
+        sys_err <= 1'b0;
+        sys_ack <= 1'b0;
+    end else begin
+        sys_err <= 1'b0;
+        casez (sys_addr[19:0])
+            20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {{32- 1{1'b0}}, toggle}; end
+            endcase
     end
 endmodule
