@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     int fd = -1;
     int ret_val = EXIT_SUCCESS;
 
-    unsigned long address = 0x40000000;
+    unsigned long address = 0x40100014;
     if((fd = open("/dev/mem", O_RDONLY)) == -1) FATAL;
     map_base = mmap(0, MAP_SIZE, PROT_READ, MAP_SHARED, fd, address & ~MAP_MASK);
     if(map_base == (void *) -1) FATAL;
