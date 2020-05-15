@@ -55,6 +55,7 @@ wire sys_en;
 assign sys_en = sys_wen | sys_ren;
 
 always @(posedge clk_i) begin
+    sys_err <= 1'b0;
     toggle <= ~toggle;
 
     casez (sys_addr[19:0])
