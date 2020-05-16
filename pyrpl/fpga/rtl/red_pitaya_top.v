@@ -473,33 +473,33 @@ red_pitaya_scope i_scope (
 
 //wire    [14-1:0]    to_asg;
 //reg DIO1_P = 1;
-reg toggle = 1'b1;
-wire mem_test_clk;
+//reg toggle = 1'b1;
+//wire mem_test_clk;
 //wire sys_en;
 //assign sys_en = sys_wen | sys_ren;
 
-red_pitaya_clk_div i_clk_div(
-    .clk_i          (   adc_clk                     ),
-    .clk_o          (   mem_test_clk                )
-    );
-
-red_pitaya_mem_interface_tester i_mem_tester(
-    .clk_i          (   adc_clk                     ),
-    .clk_toggle_i   (   mem_test_clk                ),
-    .state          (   DIO1_P                      ),
-    .rstn_i         (   adc_rstn                    ),
-
-
-      // System bus
-    .sys_addr        (  sys_addr                   ),  // address
-    .sys_wdata       (  sys_wdata                  ),  // write data
-    .sys_sel         (  sys_sel                    ),  // write byte select
-    .sys_wen         (  sys_wen[6]                 ),  // write enable
-    .sys_ren         (  sys_ren[6]                 ),  // read enable
-    .sys_rdata       (  sys_rdata[ 6*32+31: 6*32]  ),  // read data
-    .sys_err         (  sys_err[6]                 ),  // error indicator
-    .sys_ack         (  sys_ack[6]                 )   // acknowledge signal
-    );
+//red_pitaya_clk_div i_clk_div(
+//    .clk_i          (   adc_clk                     ),
+//    .clk_o          (   mem_test_clk                )
+//    );
+//
+//red_pitaya_mem_interface_tester i_mem_tester(
+//    .clk_i          (   adc_clk                     ),
+//    .clk_toggle_i   (   mem_test_clk                ),
+//    .state          (   DIO1_P                      ),
+//    .rstn_i         (   adc_rstn                    ),
+//
+//
+//      // System bus
+//    .sys_addr        (  sys_addr                   ),  // address
+//    .sys_wdata       (  sys_wdata                  ),  // write data
+//    .sys_sel         (  sys_sel                    ),  // write byte select
+//    .sys_wen         (  sys_wen[6]                 ),  // write enable
+//    .sys_ren         (  sys_ren[6]                 ),  // read enable
+//    .sys_rdata       (  sys_rdata[ 6*32+31: 6*32]  ),  // read data
+//    .sys_err         (  sys_err[6]                 ),  // error indicator
+//    .sys_ack         (  sys_ack[6]                 )   // acknowledge signal
+//    );
 
 //always @(posedge mem_test_clk) begin
 //    toggle <= ~toggle;
@@ -516,13 +516,22 @@ red_pitaya_mem_interface_tester i_mem_tester(
 //    end
 
 
-//red_pitaya_fads i_fads(
-//    .adc_clk_i      (   adc_clk                     ),
-//    .adc_rstn_i     (   adc_rstn                    ),
-//    .adc_a_i        (   to_scope_a                  ),
-////    .sort_trig      (   exp_p_io[1]                 )
-//    .sort_trig      (   DIO1_P                      )
-//    );
+red_pitaya_fads i_fads(
+    .adc_clk_i      (   adc_clk                     ),
+    .adc_rstn_i     (   adc_rstn                    ),
+    .adc_a_i        (   to_scope_a                  ),
+    .sort_trig      (   DIO1_P                      ),
+
+    // System bus
+    .sys_addr        (  sys_addr                   ),  // address
+    .sys_wdata       (  sys_wdata                  ),  // write data
+    .sys_sel         (  sys_sel                    ),  // write byte select
+    .sys_wen         (  sys_wen[6]                 ),  // write enable
+    .sys_ren         (  sys_ren[6]                 ),  // read enable
+    .sys_rdata       (  sys_rdata[ 6*32+31: 6*32]  ),  // read data
+    .sys_err         (  sys_err[6]                 ),  // error indicator
+    .sys_ack         (  sys_ack[6]                 )   // acknowledge signal
+    );
 
 //---------------------------------------------------------------------------------
 //  DAC arbitrary signal generator
