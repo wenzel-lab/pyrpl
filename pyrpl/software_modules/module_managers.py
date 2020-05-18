@@ -1,7 +1,7 @@
 import logging
 logger = logging.getLogger(name=__name__)
 from ..widgets.module_widgets import ModuleManagerWidget, AsgManagerWidget, PidManagerWidget, IqManagerWidget, \
-    ScopeManagerWidget, IirManagerWidget
+    ScopeManagerWidget, IirManagerWidget, FadsManagerWidget
 from ..modules import Module
 
 
@@ -131,3 +131,10 @@ class Trigs(ModuleManager):
     Only one trig, but it should be protected by the slave/owner mechanism.
     """
     pass #_widget_class = IirManagerWidget
+
+
+class Fadss(ModuleManager):
+    """
+    Only one Fads, but it should be protected by the slave/owner mechanism.
+    """
+    _widget_class = FadsManagerWidget

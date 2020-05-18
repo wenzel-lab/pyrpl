@@ -260,3 +260,7 @@ class IqManagerWidget(ModuleManagerWidget):
 
         super(IqManagerWidget, self).resizeEvent(event)
         self.adjust_drawing()
+
+
+class FadsManagerWidget(ModuleManagerWidget):
+    pass
