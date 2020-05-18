@@ -18,11 +18,10 @@ class FADS(HardwareModule):
 
     _adc_bits = 14
 
-    low_threshold = FloatRegister(0x0, bits=_adc_bits, norm=0xf,
+    low_threshold = FloatRegister(0x0, bits=_adc_bits, norm=2 ** 13,
                                   doc="low threshold for sorting")
-    high_threshold = FloatRegister(0x4, bits=_adc_bits, norm=0xff,
+    high_threshold = FloatRegister(0x4, bits=_adc_bits, norm=2 ** 13,
                                    doc="low threshold for sorting")
-
 
     # def __init__(self, parent):
     #     super().__init__(parent)
