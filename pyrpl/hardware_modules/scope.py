@@ -390,7 +390,7 @@ class Scope(HardwareModule, AcquisitionModule):
         # self.data_length)],dtype=np.int32)
         x = np.array(self._reads(0x10000, self.data_length), dtype=np.int16)
         x[x >= 2 ** 13] -= 2 ** 14
-        return x
+        return x * 20
 
     @property
     def _rawdata_ch2(self):
@@ -399,7 +399,7 @@ class Scope(HardwareModule, AcquisitionModule):
         # self.data_length)],dtype=np.int32)
         x = np.array(self._reads(0x20000, self.data_length), dtype=np.int16)
         x[x >= 2 ** 13] -= 2 ** 14
-        return x
+        return x * 20
 
     @property
     def _data_ch1(self):
