@@ -16,9 +16,11 @@ class FADS(HardwareModule):
 
     _setup_attributes = _gui_attributes
 
-    low_threshold = FloatRegister(0x0, bits=14, norm=0xf,
+    _adc_bits = 14
+
+    low_threshold = FloatRegister(0x0, bits=_adc_bits, norm=0xf,
                                   doc="low threshold for sorting")
-    high_threshold = FloatRegister(0x4, bits=14, norm=0xff,
+    high_threshold = FloatRegister(0x4, bits=_adc_bits, norm=0xff,
                                    doc="low threshold for sorting")
 
 
