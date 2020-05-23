@@ -36,9 +36,10 @@ module red_pitaya_fads #(
 );
 
 // Registers for thresholds
-reg [DWT -1:0]droplet_threshold;
-reg [DWT -1:0]sorting_threshold;
-reg [DWT -1:0]high_threshold;
+// need to be signed for proper comparison with negative voltages
+reg signed [DWT -1:0]droplet_threshold;
+reg signed [DWT -1:0]sorting_threshold;
+reg signed [DWT -1:0]high_threshold;
 //reg [MEM -1:0]width_threshold;
 
 // Registers for droplet counters;
@@ -55,11 +56,15 @@ always @(posedge adc_clk_i) begin
 end
 
 // System bus
+// setting up necessary wires
 wire sys_en;
 assign sys_en = sys_wen | sys_ren;
 
+// Writing to system bus
 always @(posedge adc_clk_i)
+    // Necessary handling of reset signal
     if (adc_rstn_i == 1'b0) begin
+        // resetting to default values
         sorting_threshold   <= 14'b00000000001111;
         high_threshold      <= 14'b00000011111111;
 //        droplets            <= 32'd0;
@@ -69,13 +74,16 @@ always @(posedge adc_clk_i)
 //        if (sys_addr[19:0]==20'h00008)   droplets               <= sys_wdata[MEM-1:0];
     end
 
+// Reading from system bus
 always @(posedge adc_clk_i)
+    // Necessary handling of reset signal
     if (adc_rstn_i == 1'b0) begin
         sys_err <= 1'b0;
         sys_ack <= 1'b0;
     end else begin
         sys_err <= 1'b0;
         casez (sys_addr[19:0])
+        //   Address  |       handling bus signals        | creating 32 bit wide word containing the data
             20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, sorting_threshold}  ; end
             20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_threshold}     ; end
             20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}}, droplets}           ; end
