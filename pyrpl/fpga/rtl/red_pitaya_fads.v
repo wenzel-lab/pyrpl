@@ -60,7 +60,7 @@ end
 wire sys_en;
 assign sys_en = sys_wen | sys_ren;
 
-// Writing to system bus
+// Reading from system bus
 always @(posedge adc_clk_i)
     // Necessary handling of reset signal
     if (adc_rstn_i == 1'b0) begin
@@ -74,7 +74,7 @@ always @(posedge adc_clk_i)
 //        if (sys_addr[19:0]==20'h00008)   droplets               <= sys_wdata[MEM-1:0];
     end
 
-// Reading from system bus
+// Writing to system bus
 always @(posedge adc_clk_i)
     // Necessary handling of reset signal
     if (adc_rstn_i == 1'b0) begin
