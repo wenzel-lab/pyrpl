@@ -37,22 +37,46 @@ module red_pitaya_fads #(
 
 // Registers for thresholds
 // need to be signed for proper comparison with negative voltages
-reg signed [DWT -1:0]droplet_threshold;
-reg signed [DWT -1:0]sorting_threshold;
-reg signed [DWT -1:0]high_threshold;
-//reg [MEM -1:0]width_threshold;
+reg signed [DWT -1:0] noise_intensity_threshold;
+reg signed [DWT -1:0]   low_intensity_threshold;
+reg signed [DWT -1:0]  high_intensity_threshold;
+
+reg [MEM -1:0]  low_width_threshold;
+reg [MEM -1:0] high_width_threshold;
+
+// Registers for timers
+reg [MEM -1:0] droplet_width_timer = 32'd0;
 
 // Registers for droplet counters;
-reg [MEM -1:0]droplets = 32'd0;
+reg [MEM -1:0]  low_intensity_droplets = 32'd0;
+reg [MEM -1:0] high_intensity_droplets = 32'd0;
 
+reg [MEM -1:0] short_droplets = 32'd0;
+reg [MEM -1:0]  long_droplets = 32'd0;
+
+reg [MEM -1:0] positive_droplets = 32'd0;
+
+
+// State machine
+wire droplet_intensity;
+assign droplet_intensity = adc_rstn_i > noise_intensity_threshold;
+
+wire positive_intensity;
+assign positive_intensity = adc_rstn_i > low_intensity_threshold && adc_rstn_i < high_intensity_threshold;
+
+
+/* Temporarily deactivated
 always @(posedge adc_clk_i) begin
     if ((adc_a_i > sorting_threshold) && (adc_a_i < high_threshold))
     begin
-        sort_trig <= 1;
-        droplets <= droplets + 32'd1;
+        droplet_width_timer <= droplet_width_timer + 32'd1;
     end else begin
-        sort_trig <= 0;
+        droplet_width_timer <= 32'd0;
     end
+end
+
+always @(posedge droplet_aquired) begin
+
 end
 
 // System bus
@@ -91,4 +115,5 @@ always @(posedge adc_clk_i)
         endcase
     end
 
+*/
 endmodule
