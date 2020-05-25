@@ -58,24 +58,27 @@ reg [MEM -1:0] positive_droplets = 32'd0;
 
 
 // State machine
-// TODO proper larger or equal etc.
 wire droplet_intensity;
-assign droplet_intensity = adc_rstn_i > noise_intensity_threshold;
+assign droplet_intensity = adc_rstn_i >= noise_intensity_threshold;
 
 wire positive_intensity;
-assign positive_intensity = adc_rstn_i > low_intensity_threshold && adc_rstn_i < high_intensity_threshold;
+assign positive_intensity = adc_rstn_i >= low_intensity_threshold && adc_rstn_i < high_intensity_threshold;
 
 wire high_intensity;
-assign droplet_intensity = adc_rstn_i > high_intensity_threshold;
+assign droplet_intensity = adc_rstn_i >= high_intensity_threshold;
 
 wire low_width;
 assign low_width = droplet_width_timer < low_width_threshold;
 
 wire positive_width;
-assign positive_width = droplet_width_timer > low_width_threshold && droplet_width_timer < high_width_threshold;
+assign positive_width = droplet_width_timer >= low_width_threshold && droplet_width_timer < high_width_threshold;
 
 wire high_width;
-assign high_width = droplet_width_timer > high_width_threshold;
+assign high_width = droplet_width_timer >= high_width_threshold;
+
+//always @(posedge droplet_intensity) begin
+//
+//end
 
 /* Temporarily deactivated
 always @(posedge adc_clk_i) begin
