@@ -37,10 +37,11 @@ module red_pitaya_fads #(
 
 // Registers for thresholds
 // need to be signed for proper comparison with negative voltages
-reg signed [DWT -1:0] noise_intensity_threshold;
+reg signed [DWT -1:0]   min_intensity_threshold;
 reg signed [DWT -1:0]   low_intensity_threshold;
 reg signed [DWT -1:0]  high_intensity_threshold;
 
+reg [MEM -1:0]  min_width_threshold;
 reg [MEM -1:0]  low_width_threshold;
 reg [MEM -1:0] high_width_threshold;
 
@@ -58,27 +59,65 @@ reg [MEM -1:0] positive_droplets = 32'd0;
 
 
 // State machine
-wire droplet_intensity;
-assign droplet_intensity = adc_rstn_i >= noise_intensity_threshold;
-
+// Intensity
+wire  droplet_intensity;
 wire positive_intensity;
-assign positive_intensity = adc_rstn_i >= low_intensity_threshold && adc_rstn_i < high_intensity_threshold;
+wire     high_intensity;
 
-wire high_intensity;
-assign droplet_intensity = adc_rstn_i >= high_intensity_threshold;
+reg  droplet_intensity_reg = 1'b0;
+reg positive_intensity_reg = 1'b0;
+reg     high_intensity_reg = 1'b0;
 
-wire low_width;
-assign low_width = droplet_width_timer < low_width_threshold;
-
+// Width
+wire      min_width;
+wire      low_width;
 wire positive_width;
-assign positive_width = droplet_width_timer >= low_width_threshold && droplet_width_timer < high_width_threshold;
+wire     high_width;
 
-wire high_width;
-assign high_width = droplet_width_timer >= high_width_threshold;
+reg      min_width_reg = 1'b0;
+reg      low_width_reg = 1'b0;
+reg positive_width_reg = 1'b0;
+reg     high_width_reg = 1'b0;
 
-//always @(posedge droplet_intensity) begin
-//
-//end
+// Maintenance
+reg droplet_acquisition_enable;
+
+// Assigning
+assign  droplet_intensity = adc_rstn_i >=   min_intensity_threshold;
+assign positive_intensity = adc_rstn_i >=   low_intensity_threshold && adc_rstn_i < high_intensity_threshold;
+assign  droplet_intensity = adc_rstn_i >=  high_intensity_threshold;
+
+assign      min_width = droplet_width_timer >=  min_width_threshold;
+assign      low_width = droplet_width_timer >=  min_width_threshold && droplet_width_timer <  low_width_threshold;
+assign positive_width = droplet_width_timer >=  low_width_threshold && droplet_width_timer < high_width_threshold;
+assign     high_width = droplet_width_timer >= high_width_threshold;
+
+always @(posedge droplet_intensity) begin
+    if (droplet_acquisition_enable) begin
+        droplet_intensity_reg <= 1'b1;
+    end
+end
+
+
+// Updating state registers
+always @(posedge adc_rstn_i) begin
+    if (droplet_intensity_reg) begin
+        // Intensity
+        positive_intensity_reg <= positive_intensity_reg | positive_intensity;
+            high_intensity_reg <=     high_intensity_reg |     high_intensity;
+
+        // Width
+             low_width_reg <=      low_width_reg &      low_width;
+        positive_width_reg <= positive_width_reg & positive_width;
+            high_width_reg <=     high_width_reg |     high_width;
+    end
+end
+
+always @(negedge droplet_intensity) begin
+    if (droplet_intensity_reg & min_width_reg) begin
+
+    end
+end
 
 /* Temporarily deactivated
 always @(posedge adc_clk_i) begin
