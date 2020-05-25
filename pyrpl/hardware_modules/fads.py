@@ -11,17 +11,31 @@ class FADS(HardwareModule):
     name = 'FADS'
     _widget_class = FadsWidget
 
-    _gui_attributes = ["low_threshold",
-                       "high_threshold"]
+    _gui_attributes = ["min_intensity_threshold",
+                       "low_intensity_threshold",
+                       "high_intensity_threshold",
+                       "min_width_threshold",
+                       "low_width_threshold",
+                       "high_width_threshold"]
 
     _setup_attributes = _gui_attributes
 
     _adc_bits = 14
+    _mem_bits = 32
 
-    low_threshold = FloatRegister(0x0, bits=_adc_bits, norm=2 ** 13 / 20,
-                                  doc="low threshold for sorting")
-    high_threshold = FloatRegister(0x4, bits=_adc_bits, norm=2 ** 13 / 20,
-                                   doc="low threshold for sorting")
+    min_intensity_threshold = FloatRegister(0x0, bits=_adc_bits, norm=2 ** 13 / 20,
+                                            doc="minimum intensity for a signal to be registered as a droplet")
+    low_intensity_threshold = FloatRegister(0x4, bits=_adc_bits, norm=2 ** 13 / 20,
+                                            doc="minimum intensity for a droplet to be sorted")
+    high_intensity_threshold = FloatRegister(0x8, bits=_adc_bits, norm=2 ** 13 / 20,
+                                             doc="maximum intensity for a droplet to be sorted")
+
+    min_width_threshold = IntRegister(0x10, bits=_mem_bits,
+                                      doc="minimum width for a signal to be registered as a droplet")
+    low_width_threshold = IntRegister(0x14, bits=_mem_bits,
+                                      doc="minimum width for a droplet to be sorted")
+    high_width_threshold = IntRegister(0x18, bits=_mem_bits,
+                                       doc="maximum width for a droplet to be sorted")
 
     # def __init__(self, parent):
     #     super().__init__(parent)

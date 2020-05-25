@@ -46,7 +46,7 @@ reg [MEM -1:0]  low_width_threshold;
 reg [MEM -1:0] high_width_threshold;
 
 // Registers for timers
-reg [MEM -1:0] droplet_width_timer = 32'd0;
+reg [MEM -1:0] droplet_width_counter = 32'd0;
 
 // Registers for droplet counters;
 reg [MEM -1:0]  low_intensity_droplets = 32'd0;
@@ -60,13 +60,15 @@ reg [MEM -1:0] positive_droplets = 32'd0;
 
 // State machine
 // Intensity
-wire  droplet_intensity;
+wire      min_intensity;
 wire positive_intensity;
 wire     high_intensity;
 
-reg  droplet_intensity_reg = 1'b0;
-reg positive_intensity_reg = 1'b0;
-reg     high_intensity_reg = 1'b0;
+reg      min_intensity_reg =  1'b0;
+reg positive_intensity_reg =  1'b0;
+reg     high_intensity_reg =  1'b0;
+
+reg signed [DWT -1:0] droplet_intensity_max = {1'b1, {DWT-2{1'b0}}};
 
 // Width
 wire      min_width;
@@ -80,42 +82,83 @@ reg positive_width_reg = 1'b0;
 reg     high_width_reg = 1'b0;
 
 // Maintenance
-reg droplet_acquisition_enable;
+reg droplet_acquisition_enable = 1'b1;
+reg sort_enable = 1'b0;
+reg sort_counter = 32'd0;
+reg sort_duration = 32'd125;
 
 // Assigning
-assign  droplet_intensity = adc_rstn_i >=   min_intensity_threshold;
+assign      min_intensity = adc_rstn_i >=   min_intensity_threshold;
 assign positive_intensity = adc_rstn_i >=   low_intensity_threshold && adc_rstn_i < high_intensity_threshold;
-assign  droplet_intensity = adc_rstn_i >=  high_intensity_threshold;
+assign      min_intensity = adc_rstn_i >=  high_intensity_threshold;
 
-assign      min_width = droplet_width_timer >=  min_width_threshold;
-assign      low_width = droplet_width_timer >=  min_width_threshold && droplet_width_timer <  low_width_threshold;
-assign positive_width = droplet_width_timer >=  low_width_threshold && droplet_width_timer < high_width_threshold;
-assign     high_width = droplet_width_timer >= high_width_threshold;
+assign      min_width = droplet_width_counter >=  min_width_threshold;
+assign      low_width = droplet_width_counter >=  min_width_threshold && droplet_width_counter <  low_width_threshold;
+assign positive_width = droplet_width_counter >=  low_width_threshold && droplet_width_counter < high_width_threshold;
+assign     high_width = droplet_width_counter >= high_width_threshold;
 
-always @(posedge droplet_intensity) begin
+always @(posedge min_intensity) begin
     if (droplet_acquisition_enable) begin
-        droplet_intensity_reg <= 1'b1;
+        min_intensity_reg <= 1'b1;
     end
 end
 
 
 // Updating state registers
-always @(posedge adc_rstn_i) begin
-    if (droplet_intensity_reg) begin
+always @(posedge adc_clk_i) begin
+    if (min_intensity_reg) begin
         // Intensity
-        positive_intensity_reg <= positive_intensity_reg | positive_intensity;
-            high_intensity_reg <=     high_intensity_reg |     high_intensity;
+        if (adc_a_i > droplet_intensity_max) begin
+            droplet_intensity_max <= adc_a_i;
+        end
 
         // Width
+        droplet_width_counter <= droplet_width_counter + 32'd1;
+
              low_width_reg <=      low_width_reg &      low_width;
         positive_width_reg <= positive_width_reg & positive_width;
             high_width_reg <=     high_width_reg |     high_width;
     end
 end
 
-always @(negedge droplet_intensity) begin
-    if (droplet_intensity_reg & min_width_reg) begin
+always @(negedge min_intensity) begin
+    if (min_intensity_reg & min_width_reg & !sort_enable) begin
+        sort_enable <= 1'b1;
 
+        droplet_intensity_max <= {1'b1, {DWT-2{1'b0}}};
+
+             min_intensity_reg <= 1'b0;
+        positive_intensity_reg <= 1'b0;
+            high_intensity_reg <= 1'b0;
+
+             min_width_reg <= 1'b0;
+             low_width_reg <= 1'b0;
+        positive_width_reg <= 1'b0;
+            high_width_reg <= 1'b0;
+    end else begin
+        droplet_intensity_max <= {1'b1, {DWT-2{1'b0}}};
+
+             min_intensity_reg <= 1'b0;
+        positive_intensity_reg <= 1'b0;
+            high_intensity_reg <= 1'b0;
+
+             min_width_reg <= 1'b0;
+             low_width_reg <= 1'b0;
+        positive_width_reg <= 1'b0;
+            high_width_reg <= 1'b0;
+    end
+end
+
+always @(posedge adc_clk_i) begin
+    if (sort_enable) begin
+         if (sort_counter < sort_duration) begin
+            sort_counter <= sort_counter + 32'd1;
+            sort_trig <= 1'b1;
+         end else begin
+            sort_counter <= 32'd0;
+            sort_trig <= 1'b0;
+            sort_enable <= 1'b0;
+         end
     end
 end
 
@@ -123,15 +166,16 @@ end
 always @(posedge adc_clk_i) begin
     if ((adc_a_i > sorting_threshold) && (adc_a_i < high_threshold))
     begin
-        droplet_width_timer <= droplet_width_timer + 32'd1;
+        droplet_width_counter <= droplet_width_counter + 32'd1;
     end else begin
-        droplet_width_timer <= 32'd0;
+        droplet_width_counter <= 32'd0;
     end
 end
 
 always @(posedge droplet_aquired) begin
 
 end
+*/
 
 // System bus
 // setting up necessary wires
@@ -143,13 +187,22 @@ always @(posedge adc_clk_i)
     // Necessary handling of reset signal
     if (adc_rstn_i == 1'b0) begin
         // resetting to default values
-        sorting_threshold   <= 14'b00000000001111;
-        high_threshold      <= 14'b00000011111111;
-//        droplets            <= 32'd0;
+         min_intensity_threshold  <= 14'b00000000001111;
+         low_intensity_threshold  <= 14'b00000000010000;
+        high_intensity_threshold  <= 14'b00000011111111;
+
+             min_width_threshold  <= 32'h00000001;
+             low_width_threshold  <= 32'haabbccdd;
+            high_width_threshold  <= 32'hccddeeff;
+
     end else if (sys_wen) begin
-        if (sys_addr[19:0]==20'h00000)   sorting_threshold      <= sys_wdata[DWT-1:0];
-        if (sys_addr[19:0]==20'h00004)   high_threshold         <= sys_wdata[DWT-1:0];
-//        if (sys_addr[19:0]==20'h00008)   droplets               <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00000)    min_intensity_threshold    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h00004)    low_intensity_threshold    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h00008)   high_intensity_threshold    <= sys_wdata[DWT-1:0];
+
+        if (sys_addr[19:0]==20'h00020)        min_width_threshold    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00024)        low_width_threshold    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00028)       high_width_threshold    <= sys_wdata[MEM-1:0];
     end
 
 // Writing to system bus
@@ -162,12 +215,14 @@ always @(posedge adc_clk_i)
         sys_err <= 1'b0;
         casez (sys_addr[19:0])
         //   Address  |       handling bus signals        | creating 32 bit wide word containing the data
-            20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, sorting_threshold}  ; end
-            20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_threshold}     ; end
-            20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}}, droplets}           ; end
+            20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold}     ; end
+            20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  low_intensity_threshold}     ; end
+            20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold}     ; end
+
+            20'h00010: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold}     ; end
+            20'h00014: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold}     ; end
+            20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold}     ; end
             default:   begin sys_ack <= sys_en;  sys_rdata <= 32'h0                                 ; end
         endcase
     end
-
-*/
 endmodule
