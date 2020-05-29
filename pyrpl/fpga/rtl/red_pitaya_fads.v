@@ -201,89 +201,8 @@ always @(posedge adc_clk_i) begin
 
     end
 
-
 end
 
-
-//always @(posedge min_intensity) begin
-//    if (droplet_acquisition_enable) begin
-//        min_intensity_reg <= 1'b1;
-//    end
-//end
-//
-//
-//// Updating state registers
-//always @(posedge adc_clk_i) begin
-//    if (min_intensity_reg) begin
-//        // Intensity
-//        if (adc_a_i > droplet_intensity_max) begin
-//            droplet_intensity_max <= adc_a_i;
-//        end
-//
-//        // Width
-//        droplet_width_counter <= droplet_width_counter + 32'd1;
-//
-//             low_width_reg <=      low_width_reg &      low_width;
-//        positive_width_reg <= positive_width_reg & positive_width;
-//            high_width_reg <=     high_width_reg |     high_width;
-//    end
-//end
-//
-//always @(negedge min_intensity) begin
-//    if (min_intensity_reg & min_width_reg & !sort_enable) begin
-//        sort_enable <= 1'b1;
-//
-//        droplet_intensity_max <= {1'b1, {DWT-2{1'b0}}};
-//
-//             min_intensity_reg <= 1'b0;
-//        positive_intensity_reg <= 1'b0;
-//            high_intensity_reg <= 1'b0;
-//
-//             min_width_reg <= 1'b0;
-//             low_width_reg <= 1'b0;
-//        positive_width_reg <= 1'b0;
-//            high_width_reg <= 1'b0;
-//    end else begin
-//        droplet_intensity_max <= {1'b1, {DWT-2{1'b0}}};
-//
-//             min_intensity_reg <= 1'b0;
-//        positive_intensity_reg <= 1'b0;
-//            high_intensity_reg <= 1'b0;
-//
-//             min_width_reg <= 1'b0;
-//             low_width_reg <= 1'b0;
-//        positive_width_reg <= 1'b0;
-//            high_width_reg <= 1'b0;
-//    end
-//end
-//
-//always @(posedge adc_clk_i) begin
-//    if (sort_enable) begin
-//         if (sort_counter < sort_duration) begin
-//            sort_counter <= sort_counter + 32'd1;
-//            sort_trig <= 1'b1;
-//         end else begin
-//            sort_counter <= 32'd0;
-//            sort_trig <= 1'b0;
-//            sort_enable <= 1'b0;
-//         end
-//    end
-//end
-
-/* Temporarily deactivated
-always @(posedge adc_clk_i) begin
-    if ((adc_a_i > sorting_threshold) && (adc_a_i < high_threshold))
-    begin
-        droplet_width_counter <= droplet_width_counter + 32'd1;
-    end else begin
-        droplet_width_counter <= 32'd0;
-    end
-end
-
-always @(posedge droplet_aquired) begin
-
-end
-*/
 
 // System bus
 // setting up necessary wires
@@ -335,6 +254,15 @@ always @(posedge adc_clk_i)
             20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold}     ; end
 
             20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               fads_reset}     ; end
+
+
+            20'h00100: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},   low_intensity_droplets}     ; end
+            20'h00104: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},  high_intensity_droplets}     ; end
+
+            20'h00108: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},           short_droplets}     ; end
+            20'h0010c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},            long_droplets}     ; end
+
+            20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
 
             default:   begin sys_ack <= sys_en;  sys_rdata <= 32'h0                                 ; end
         endcase
