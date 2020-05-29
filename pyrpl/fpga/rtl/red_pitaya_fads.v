@@ -284,9 +284,9 @@ always @(posedge adc_clk_i)
         if (sys_addr[19:0]==20'h00004)    low_intensity_threshold    <= sys_wdata[DWT-1:0];
         if (sys_addr[19:0]==20'h00008)   high_intensity_threshold    <= sys_wdata[DWT-1:0];
 
-        if (sys_addr[19:0]==20'h00020)        min_width_threshold    <= sys_wdata[MEM-1:0];
-        if (sys_addr[19:0]==20'h00024)        low_width_threshold    <= sys_wdata[MEM-1:0];
-        if (sys_addr[19:0]==20'h00028)       high_width_threshold    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00010)        min_width_threshold    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00014)        low_width_threshold    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00018)       high_width_threshold    <= sys_wdata[MEM-1:0];
     end
 
 // Writing to system bus
