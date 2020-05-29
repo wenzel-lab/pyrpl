@@ -110,18 +110,26 @@ always @(posedge adc_clk_i) begin
 
     // Base state | 0
     if (state == 4'h0) begin
-        if (droplet_acquisition_enable) begin
-            state <= 4'h1;
+        if (fads_reset)
+                state <= 4'h0;
+        else begin
+            if (droplet_acquisition_enable) begin
+                state <= 4'h1;
+            end
         end
     end
 
     // Wait for Droplet | 1
     if (state == 4'h1) begin
-        if (min_intensity) begin
-            droplet_width_counter <= 32'd1;
-            droplet_intensity_max <= adc_a_i;
+        if (fads_reset)
+                state <= 4'h0;
+        else begin
+            if (min_intensity) begin
+                droplet_width_counter <= 32'd1;
+                droplet_intensity_max <= adc_a_i;
 
-            state <= 4'h2;
+                state <= 4'h2;
+            end
         end
     end
 
@@ -136,8 +144,12 @@ always @(posedge adc_clk_i) begin
         droplet_width_counter <= droplet_width_counter + 32'd1;
 
         // State
-        if (!min_intensity) begin
-            state <= 4'h3;
+        if (fads_reset)
+                state <= 4'h0;
+        else begin
+            if (!min_intensity) begin
+                state <= 4'h3;
+            end
         end
     end
 
@@ -160,11 +172,16 @@ always @(posedge adc_clk_i) begin
 
 
         // State
-        if (sort_enable && positive_intensity && positive_width) begin
-            sort_counter <= 32'd0;
-            state <= 4'h4;
-        end else begin
-            state <= 4'h0;
+
+        if (fads_reset)
+                state <= 4'h0;
+        else begin
+            if (sort_enable && positive_intensity && positive_width) begin
+                sort_counter <= 32'd0;
+                state <= 4'h4;
+            end else begin
+                state <= 4'h0;
+            end
         end
 
     end
@@ -174,6 +191,9 @@ always @(posedge adc_clk_i) begin
         if (sort_counter < sort_duration) begin
             sort_counter <= sort_counter + 32'd1;
             sort_trig <= 1'b1;
+
+            if (fads_reset)
+                state <= 4'h0;
         end else begin
             sort_trig <= 1'b0;
             state <= 4'h0;
@@ -291,6 +311,9 @@ always @(posedge adc_clk_i)
         if (sys_addr[19:0]==20'h00010)        min_width_threshold    <= sys_wdata[MEM-1:0];
         if (sys_addr[19:0]==20'h00014)        low_width_threshold    <= sys_wdata[MEM-1:0];
         if (sys_addr[19:0]==20'h00018)       high_width_threshold    <= sys_wdata[MEM-1:0];
+
+        if (sys_addr[19:0]==20'h00020)                 fads_reset    <= sys_wdata[MEM-1:0];
+
     end
 
 // Writing to system bus
@@ -310,6 +333,9 @@ always @(posedge adc_clk_i)
             20'h00010: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold}     ; end
             20'h00014: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold}     ; end
             20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold}     ; end
+
+            20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               fads_reset}     ; end
+
             default:   begin sys_ack <= sys_en;  sys_rdata <= 32'h0                                 ; end
         endcase
     end
