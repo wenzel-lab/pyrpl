@@ -61,12 +61,13 @@ reg [MEM -1:0] positive_droplets = 32'd0;
 // State machine
 // Intensity
 wire      min_intensity;
+wire      low_intensity;
 wire positive_intensity;
 wire     high_intensity;
 
-reg      min_intensity_reg =  1'b0;
-reg positive_intensity_reg =  1'b0;
-reg     high_intensity_reg =  1'b0;
+//reg      min_intensity_reg =  1'b0;
+//reg positive_intensity_reg =  1'b0;
+//reg     high_intensity_reg =  1'b0;
 
 reg signed [DWT -1:0] droplet_intensity_max = {1'b1, {DWT-2{1'b0}}};
 
@@ -76,37 +77,52 @@ wire      low_width;
 wire positive_width;
 wire     high_width;
 
-reg      min_width_reg = 1'b0;
-reg      low_width_reg = 1'b0;
-reg positive_width_reg = 1'b0;
-reg     high_width_reg = 1'b0;
+//reg      min_width_reg = 1'b0;
+//reg      low_width_reg = 1'b0;
+//reg positive_width_reg = 1'b0;
+//reg     high_width_reg = 1'b0;
 
 // Maintenance
 reg droplet_acquisition_enable = 1'b1;
 reg sort_enable = 1'b0;
-reg sort_counter = 32'd0;
-reg sort_duration = 32'd125;
+reg [MEM -1:0] sort_counter = 32'd0;
+reg [MEM -1:0] sort_duration = 32'd125;
+reg fads_reset = 1'b0;
+
+reg [4-1:0] state = 4'h0;
 
 // Assigning
-assign      min_intensity = adc_rstn_i >=   min_intensity_threshold;
-assign positive_intensity = adc_rstn_i >=   low_intensity_threshold && adc_rstn_i < high_intensity_threshold;
-assign      min_intensity = adc_rstn_i >=  high_intensity_threshold;
+assign      min_intensity = adc_a_i >= min_intensity_threshold;
 
-assign      min_width = droplet_width_counter >=  min_width_threshold;
-assign      low_width = droplet_width_counter >=  min_width_threshold && droplet_width_counter <  low_width_threshold;
-assign positive_width = droplet_width_counter >=  low_width_threshold && droplet_width_counter < high_width_threshold;
-assign     high_width = droplet_width_counter >= high_width_threshold;
+assign      low_intensity = (droplet_intensity_max >=   min_intensity_threshold) && (droplet_intensity_max < low_intensity_threshold);
+assign positive_intensity = (droplet_intensity_max >=   low_intensity_threshold) && (droplet_intensity_max < high_intensity_threshold);
+assign     high_intensity =  droplet_intensity_max >=  high_intensity_threshold;
 
-always @(posedge min_intensity) begin
-    if (droplet_acquisition_enable) begin
-        min_intensity_reg <= 1'b1;
-    end
-end
+assign      min_width =  droplet_width_counter >=  min_width_threshold;
+assign      low_width = (droplet_width_counter >=  min_width_threshold) && (droplet_width_counter <  low_width_threshold);
+assign positive_width = (droplet_width_counter >=  low_width_threshold) && (droplet_width_counter < high_width_threshold);
+assign     high_width =  droplet_width_counter >= high_width_threshold;
 
-
-// Updating state registers
 always @(posedge adc_clk_i) begin
-    if (min_intensity_reg) begin
+    // Base state | 0
+    if (state == 4'h0) begin
+        if (droplet_acquisition_enable) begin
+            state <= 4'h1;
+        end
+    end
+
+    // Wait for Droplet | 1
+    if (state == 4'h1) begin
+        if (min_intensity) begin
+            droplet_width_counter <= 32'd1;
+            droplet_intensity_max <= adc_a_i;
+
+            state <= 4'h2;
+        end
+    end
+
+    // Acquiring Droplet | 2
+    if (state == 4'h2) begin
         // Intensity
         if (adc_a_i > droplet_intensity_max) begin
             droplet_intensity_max <= adc_a_i;
@@ -115,52 +131,120 @@ always @(posedge adc_clk_i) begin
         // Width
         droplet_width_counter <= droplet_width_counter + 32'd1;
 
-             low_width_reg <=      low_width_reg &      low_width;
-        positive_width_reg <= positive_width_reg & positive_width;
-            high_width_reg <=     high_width_reg |     high_width;
+        // State
+        if (!min_intensity) begin
+            state <= 4'h3;
+        end
     end
-end
 
-always @(negedge min_intensity) begin
-    if (min_intensity_reg & min_width_reg & !sort_enable) begin
-        sort_enable <= 1'b1;
+    // Evaluating Droplet | 3
+    if (state == 4'h3) begin
+        if (positive_intensity && positive_width)
+            positive_droplets <= positive_droplets + 32'd1;
 
-        droplet_intensity_max <= {1'b1, {DWT-2{1'b0}}};
+        if (low_intensity)
+            low_intensity_droplets <= low_intensity_droplets + 32'd1;
 
-             min_intensity_reg <= 1'b0;
-        positive_intensity_reg <= 1'b0;
-            high_intensity_reg <= 1'b0;
+        if (high_intensity_droplets)
+            high_intensity_droplets <= high_intensity_droplets + 32'd1;
 
-             min_width_reg <= 1'b0;
-             low_width_reg <= 1'b0;
-        positive_width_reg <= 1'b0;
-            high_width_reg <= 1'b0;
-    end else begin
-        droplet_intensity_max <= {1'b1, {DWT-2{1'b0}}};
+        if (low_width)
+            short_droplets <= short_droplets + 32'd1;
 
-             min_intensity_reg <= 1'b0;
-        positive_intensity_reg <= 1'b0;
-            high_intensity_reg <= 1'b0;
+        if (high_width)
+            long_droplets <= long_droplets + 32'd1;
 
-             min_width_reg <= 1'b0;
-             low_width_reg <= 1'b0;
-        positive_width_reg <= 1'b0;
-            high_width_reg <= 1'b0;
+
+        // State
+        if (sort_enable && positive_intensity && positive_width) begin
+            sort_counter <= 32'd0;
+            state <= 4'h4;
+        end else begin
+            state <= 4'h0;
+        end
+
     end
-end
 
-always @(posedge adc_clk_i) begin
-    if (sort_enable) begin
-         if (sort_counter < sort_duration) begin
+    // Sorting | 4
+    if (state == 4'h4) begin
+        if (sort_counter < sort_duration) begin
             sort_counter <= sort_counter + 32'd1;
             sort_trig <= 1'b1;
-         end else begin
-            sort_counter <= 32'd0;
+        end else begin
             sort_trig <= 1'b0;
-            sort_enable <= 1'b0;
-         end
+            state <= 4'h0;
+        end
+
     end
+
+
 end
+
+
+//always @(posedge min_intensity) begin
+//    if (droplet_acquisition_enable) begin
+//        min_intensity_reg <= 1'b1;
+//    end
+//end
+//
+//
+//// Updating state registers
+//always @(posedge adc_clk_i) begin
+//    if (min_intensity_reg) begin
+//        // Intensity
+//        if (adc_a_i > droplet_intensity_max) begin
+//            droplet_intensity_max <= adc_a_i;
+//        end
+//
+//        // Width
+//        droplet_width_counter <= droplet_width_counter + 32'd1;
+//
+//             low_width_reg <=      low_width_reg &      low_width;
+//        positive_width_reg <= positive_width_reg & positive_width;
+//            high_width_reg <=     high_width_reg |     high_width;
+//    end
+//end
+//
+//always @(negedge min_intensity) begin
+//    if (min_intensity_reg & min_width_reg & !sort_enable) begin
+//        sort_enable <= 1'b1;
+//
+//        droplet_intensity_max <= {1'b1, {DWT-2{1'b0}}};
+//
+//             min_intensity_reg <= 1'b0;
+//        positive_intensity_reg <= 1'b0;
+//            high_intensity_reg <= 1'b0;
+//
+//             min_width_reg <= 1'b0;
+//             low_width_reg <= 1'b0;
+//        positive_width_reg <= 1'b0;
+//            high_width_reg <= 1'b0;
+//    end else begin
+//        droplet_intensity_max <= {1'b1, {DWT-2{1'b0}}};
+//
+//             min_intensity_reg <= 1'b0;
+//        positive_intensity_reg <= 1'b0;
+//            high_intensity_reg <= 1'b0;
+//
+//             min_width_reg <= 1'b0;
+//             low_width_reg <= 1'b0;
+//        positive_width_reg <= 1'b0;
+//            high_width_reg <= 1'b0;
+//    end
+//end
+//
+//always @(posedge adc_clk_i) begin
+//    if (sort_enable) begin
+//         if (sort_counter < sort_duration) begin
+//            sort_counter <= sort_counter + 32'd1;
+//            sort_trig <= 1'b1;
+//         end else begin
+//            sort_counter <= 32'd0;
+//            sort_trig <= 1'b0;
+//            sort_enable <= 1'b0;
+//         end
+//    end
+//end
 
 /* Temporarily deactivated
 always @(posedge adc_clk_i) begin
