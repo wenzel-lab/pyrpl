@@ -398,7 +398,7 @@ red_pitaya_hk i_hk (
   .clk_i           (  adc_clk                    ),  // clock
   .rstn_i          (  adc_rstn                   ),  // reset - active low
   // LED
-  .led_o           (  led_o                      ),  // LED output
+//  .led_o           (  led_o                      ),  // LED output
   // global configuration
   .digital_loop    (  digital_loop               ),
   // Expansion connector
@@ -482,6 +482,8 @@ red_pitaya_fads i_fads(
     .adc_rstn_i     (   adc_rstn                    ),
     .adc_a_i        (   to_scope_a                  ),
     .sort_trig      (   DIO1_P                      ),
+
+    .debug          (   led_o[4-1:0]                  ),
 
     // System bus
     .sys_addr        (  sys_addr                   ),  // address

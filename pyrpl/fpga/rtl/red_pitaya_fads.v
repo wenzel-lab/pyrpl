@@ -23,6 +23,7 @@ module red_pitaya_fads #(
 //    input       [ 14-1: 0]  adc_b_i         ,   // ADC data CHB
 
     output reg              sort_trig       ,   // Sorting trigger
+    output reg [4-1:0]      debug           ,
 
     // System bus
     input      [ 32-1: 0] sys_addr      ,  // bus address
@@ -104,6 +105,9 @@ assign positive_width = (droplet_width_counter >=  low_width_threshold) && (drop
 assign     high_width =  droplet_width_counter >= high_width_threshold;
 
 always @(posedge adc_clk_i) begin
+    // Debug
+    debug <= state;
+
     // Base state | 0
     if (state == 4'h0) begin
         if (droplet_acquisition_enable) begin
