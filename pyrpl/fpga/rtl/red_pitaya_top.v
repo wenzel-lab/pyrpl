@@ -483,7 +483,7 @@ red_pitaya_fads i_fads(
     .adc_a_i        (   to_scope_a                  ),
     .sort_trig      (   DIO1_P                      ),
 
-    .debug          (   led_o[4-1:0]                  ),
+    .debug          (   led_o                       ),
 
     // System bus
     .sys_addr        (  sys_addr                   ),  // address
