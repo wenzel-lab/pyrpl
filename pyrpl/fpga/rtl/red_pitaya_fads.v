@@ -87,7 +87,7 @@ wire     high_width;
 reg droplet_acquisition_enable = 1'b1;
 reg sort_enable = 1'b0;
 reg [MEM -1:0] sort_counter = 32'd0;
-reg [MEM -1:0] sort_duration = 32'd125;
+reg [MEM -1:0] sort_duration = 32'd125000;
 reg fads_reset = 1'b0;
 
 reg [4-1:0] state = 4'h0;
