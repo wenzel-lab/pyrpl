@@ -142,7 +142,7 @@ reg              dac_trigr    ;
 
 // state machine
 always @(posedge dac_clk_i) begin
-   if (dac_rstn_i == 1'b0) begin
+   if (dac_rstn_i == 1'b0 | ((trig_src_i == 3'd6) && (trig_fads == 1'b0))) begin
       cyc_cnt   <= {CYCLE_BITS{1'b0}} ;
       rep_cnt   <= 16'h0 ;
       dly_cnt   <= 32'h0 ;
@@ -215,7 +215,7 @@ assign dac_npnt_sub_neg = dac_npnt_sub[RSZ+16];
 
 // read pointer logic
 always @(posedge dac_clk_i)
-if (dac_rstn_i == 1'b0) begin
+if (dac_rstn_i == 1'b0 | ((trig_src_i == 3'd6) && (trig_fads == 1'b0))) begin
    dac_pnt  <= {RSZ+16{1'b0}};
 end else begin
    if (set_rst_i || (dac_trig && !dac_do)) // manual reset or start
@@ -240,7 +240,7 @@ reg  [ 20-1: 0] ext_trig_debp  ;
 reg  [ 20-1: 0] ext_trig_debn  ;
 
 always @(posedge dac_clk_i) begin
-   if (dac_rstn_i == 1'b0) begin
+   if (dac_rstn_i == 1'b0 | ((trig_src_i == 3'd6) && (trig_fads == 1'b0))) begin
       ext_trig_in   <=  3'h0 ;
       ext_trig_dp   <=  2'h0 ;
       ext_trig_dn   <=  2'h0 ;
