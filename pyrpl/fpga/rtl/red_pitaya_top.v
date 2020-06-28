@@ -476,12 +476,14 @@ red_pitaya_scope i_scope (
 //    .clk_o          (   mem_test_clk                )
 //    );
 
+wire sort_trig;
+assign DIO1_P = sort_trig;
 
 red_pitaya_fads i_fads(
     .adc_clk_i      (   adc_clk                     ),
     .adc_rstn_i     (   adc_rstn                    ),
     .adc_a_i        (   to_scope_a                  ),
-    .sort_trig      (   DIO1_P                      ),
+    .sort_trig      (   sort_trig                   ),
 
     .debug          (   led_o                       ),
 
@@ -508,6 +510,7 @@ red_pitaya_asg i_asg (
   .dac_rstn_i      (  adc_rstn                   ),  // reset - active low
   .trig_a_i        (  exp_p_in[0]                ),
   .trig_b_i        (  exp_p_in[0]                ),
+  .trig_fads_i     (  sort_trig                  ),
   .trig_out_o      (  trig_asg_out               ),
   .trig_scope_i    (  trig_scope_out             ),
   .asg1phase_o     (  asg1phase_o                ),

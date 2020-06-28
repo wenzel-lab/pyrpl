@@ -69,15 +69,16 @@
 
 module red_pitaya_asg (
   // DAC
-  output     [ 14-1: 0] dac_a_o   ,  // DAC data CHA
-  output     [ 14-1: 0] dac_b_o   ,  // DAC data CHB
-  input                 dac_clk_i ,  // DAC clock
-  input                 dac_rstn_i,  // DAC reset - active low
-  input                 trig_a_i  ,  // starting trigger CHA
-  input                 trig_b_i  ,  // starting trigger CHB
-  output     [  2-1: 0] trig_out_o,  // notification trigger
- 
-  input                 trig_scope_i    ,  // trigger from the scope
+  output     [ 14-1: 0] dac_a_o      ,  // DAC data CHA
+  output     [ 14-1: 0] dac_b_o      ,  // DAC data CHB
+  input                 dac_clk_i    ,  // DAC clock
+  input                 dac_rstn_i   ,  // DAC reset - active low
+  input                 trig_a_i     ,  // starting trigger CHA
+  input                 trig_b_i     ,  // starting trigger CHB
+  input                 trig_fads_i  ,  // fads trigger
+  output     [  2-1: 0] trig_out_o   ,  // notification trigger
+
+  input                 trig_scope_i ,  // trigger from the scope
 
   output     [ 14-1: 0] asg1phase_o,
 
@@ -162,6 +163,7 @@ red_pitaya_asg_ch  #(.RSZ (RSZ)) ch [1:0] (
   .dac_clk_i       ({dac_clk_i        , dac_clk_i        }),  // dac clock
   .dac_rstn_i      ({dac_rstn_i       , dac_rstn_i       }),  // dac reset - active low
   // trigger
+  .trig_fads       ({trig_fads_i      , trig_fads_i      }),  // software trigger
   .trig_sw_i       ({trig_b_sw        , trig_a_sw        }),  // software trigger
   .trig_ext_i      ({at_trig_a        , at_trig_b        }),  // advanced trigger as ext trigger - backwards-compatible with original version
   .trig_src_i      ({trig_b_src       , trig_a_src       }),  // trigger source selector

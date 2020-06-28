@@ -172,7 +172,8 @@ def make_asg(channel=0):
             ("ext_positive_edge", 2 << _BIT_OFFSET),  # DIO0_P pin
             ("ext_negative_edge", 3 << _BIT_OFFSET),  # DIO0_P pin
             ("ext_raw", 4 << _BIT_OFFSET),  # 4- raw DIO0_P pin
-            ("high", 5 << _BIT_OFFSET)  # 5 - constant high
+            ("high", 5 << _BIT_OFFSET),  # 5 - constant high
+            ("fads", 6 << _BIT_OFFSET)  # 6 - fads trigger
             ])
         trigger_sources = _trigger_sources.keys()
 

@@ -43,6 +43,7 @@ module red_pitaya_asg_ch #(
    input                 dac_clk_i       ,  //!< dac clock
    input                 dac_rstn_i      ,  //!< dac reset - active low
    // trigger
+   input                 trig_fads       ,  //!< software trigger
    input                 trig_sw_i       ,  //!< software trigger
    input                 trig_ext_i      ,  //!< external trigger
    input      [  3-1: 0] trig_src_i      ,  //!< trigger source selector
@@ -188,6 +189,7 @@ always @(posedge dac_clk_i) begin
           3'd3 : trig_in <= ext_trig_n  ; // external negative edge
           3'd4 : trig_in <= trig_ext_i  ; // unprocessed ext trigger
           3'd5 : trig_in <= 1'b1  ;       // always high
+          3'd6 : trig_in <= trig_fads   ; // fads trigger
 
        default : trig_in <= 1'b0        ;
       endcase
