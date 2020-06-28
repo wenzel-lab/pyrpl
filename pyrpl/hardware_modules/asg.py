@@ -50,6 +50,12 @@ class WaveformAttribute(SelectProperty):
             elif waveform == 'square':
                 y = np.ones(instance.data_length)
                 y[len(y)//2:] = -1.0
+
+                # setting first and last sample to zero
+                # to prevent output from being constant high when not triggered
+                y[0] = 0
+                y[-1] = 0
+
             elif waveform == 'dc':
                 y = np.zeros(instance.data_length)
             else:
