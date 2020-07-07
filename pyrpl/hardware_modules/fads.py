@@ -16,7 +16,9 @@ class FADS(HardwareModule):
                        "high_intensity_threshold",
                        "min_width_threshold",
                        "low_width_threshold",
-                       "high_width_threshold"]
+                       "high_width_threshold",
+                       "sort_delay",
+                       "sort_duration"]
 
     _setup_attributes = _gui_attributes
 
@@ -36,6 +38,11 @@ class FADS(HardwareModule):
                                       doc="minimum width for a droplet to be sorted")
     high_width_threshold = IntRegister(0x18, bits=_mem_bits,
                                        doc="maximum width for a droplet to be sorted")
+
+    sort_delay = IntRegister(0x24, bits=_mem_bits,
+                             doc="delay between acquisition and the sorting trigger")
+    sort_duration = IntRegister(0x28, bits=_mem_bits,
+                                doc="Duration of the sorting impulse")
 
     # def __init__(self, parent):
     #     super().__init__(parent)

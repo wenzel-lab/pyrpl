@@ -87,7 +87,9 @@ wire     high_width;
 reg droplet_acquisition_enable = 1'b1;
 reg sort_enable = 1'b1;
 reg [MEM -1:0] sort_counter = 32'd0;
+reg [MEM -1:0] sort_delay_counter = 32'd0;
 reg [MEM -1:0] sort_duration = 32'd125000;
+reg [MEM -1:0] sort_delay = 32'd31250;
 reg fads_reset = 1'b0;
 
 reg [4-1:0] state = 4'h0;
@@ -112,6 +114,7 @@ always @(posedge adc_clk_i) begin
         4'h2 : debug <= 8'b00000100;
         4'h3 : debug <= 8'b00001000;
         4'h4 : debug <= 8'b00010000;
+        4'h5 : debug <= 8'b00100000;
     endcase
 
     // Base state | 0
@@ -184,6 +187,7 @@ always @(posedge adc_clk_i) begin
         else begin
             if (sort_enable && positive_intensity && positive_width) begin
                 sort_counter <= 32'd0;
+                sort_delay_counter <= 32'd0;
                 state <= 4'h4;
             end else begin
                 state <= 4'h0;
@@ -192,8 +196,22 @@ always @(posedge adc_clk_i) begin
 
     end
 
-    // Sorting | 4
+    // Sorting Delay | 4
     if (state == 4'h4) begin
+        if (fads_reset)
+                state <= 4'h0;
+
+        if (sort_delay_counter < sort_delay) begin
+            sort_delay_counter <= sort_delay_counter + 32'd1;
+
+        end else begin
+            state <= 4'h5;
+        end
+
+    end
+
+    // Sorting | 5
+    if (state == 4'h5) begin
         if (sort_counter < sort_duration) begin
             sort_counter <= sort_counter + 32'd1;
             sort_trig <= 1'b1;
@@ -239,6 +257,9 @@ always @(posedge adc_clk_i)
 
         if (sys_addr[19:0]==20'h00020)                 fads_reset    <= sys_wdata[MEM-1:0];
 
+        if (sys_addr[19:0]==20'h00024)                 sort_delay    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00028)              sort_duration    <= sys_wdata[MEM-1:0];
+
     end
 
 // Writing to system bus
@@ -260,6 +281,9 @@ always @(posedge adc_clk_i)
             20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold}     ; end
 
             20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               fads_reset}     ; end
+
+            20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               sort_delay}     ; end
+            20'h00028: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},            sort_duration}     ; end
 
 
             20'h00100: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},   low_intensity_droplets}     ; end
