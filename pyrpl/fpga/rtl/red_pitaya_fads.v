@@ -207,7 +207,7 @@ always @(posedge adc_clk_i) begin
 
         // Logging
         // getting log data
-        logger_data_buf[logger_wp] <= positive_droplets;
+        logger_data_buf[logger_wp] <= droplet_width_counter;
         // incrementing write pointer
 //        logger_wp <= (logger_wp + ALIG) % BUFL;
         logger_wp <= logger_wp + 1;
