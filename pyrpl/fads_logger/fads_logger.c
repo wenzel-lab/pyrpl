@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     unsigned long address_base = 0x40610000;
     unsigned long address_offset = 0x0;
     unsigned long address;
-    unsigned long buffer_length = 0xf;
+    unsigned long buffer_length = 0x10;
     unsigned long address_alignment = 0x4;
 
     if((fd = open("/dev/mem", O_RDONLY)) == -1) FATAL;
