@@ -12,7 +12,9 @@ by an external high voltage amplifier to sort fluorescent droplets.
 module red_pitaya_fads #(
     parameter RSZ = 14, // RAM size: 2^RSZ,
     parameter DWT = 14, // data width thresholds
-    parameter MEM = 32  // data width RAM
+    parameter MEM = 32,  // data width RAM
+    parameter ALIG = 4'h4, // RAM alignment
+    parameter BUFL = (1<<RSZ)   // fads logger buffer length
 //    parameter signed low_threshold  = 14'b00000000001111,
 //    parameter signed high_threshold = 14'b00000011111111
 )(
@@ -94,6 +96,19 @@ reg fads_reset = 1'b0;
 
 reg [4-1:0] state = 4'h0;
 
+
+// Logger Buffer
+reg [20 -1:0] logger_wp_offset = 4'h1;
+reg [20 -1:0] logger_wp        = 16'h0000;
+
+reg [16 -1:0] logger_rp     = 16'b0;
+//reg [16 -1:0] buffer_length = 16'b1;
+
+reg [MEM-1:0] logger_data_buf [0:BUFL-1];
+reg [MEM-1:0] logger_data = 32'h0;
+reg [RSZ-1:0] logger_raddr;
+
+
 // Assigning
 assign      min_intensity = adc_a_i >= min_intensity_threshold;
 
@@ -106,6 +121,8 @@ assign      low_width = (droplet_width_counter >=  min_width_threshold) && (drop
 assign positive_width = (droplet_width_counter >=  low_width_threshold) && (droplet_width_counter < high_width_threshold);
 assign     high_width =  droplet_width_counter >= high_width_threshold;
 
+
+integer i;
 always @(posedge adc_clk_i) begin
     // Debug
     case (state)
@@ -115,13 +132,17 @@ always @(posedge adc_clk_i) begin
         4'h3 : debug <= 8'b00001000;
         4'h4 : debug <= 8'b00010000;
         4'h5 : debug <= 8'b00100000;
+        default: debug <= 8'b11111111;
     endcase
 
     // Base state | 0
     if (state == 4'h0) begin
-        if (fads_reset)
-                state <= 4'h0;
-        else begin
+        if (fads_reset) begin
+            state <= 4'h0;
+        end else begin
+            for (i=0; i<BUFL; i=i+1) begin
+                logger_data_buf[i] <= 0;
+            end
             if (droplet_acquisition_enable) begin
                 state <= 4'h1;
             end
@@ -179,6 +200,11 @@ always @(posedge adc_clk_i) begin
         if (high_width)
             long_droplets <= long_droplets + 32'd1;
 
+        // Logging
+        // getting log data
+        logger_data_buf[logger_wp] <= droplet_width_counter;
+        // incrementing write pointer
+        logger_wp <= (logger_wp + ALIG) % BUFL;
 
         // State
 
@@ -226,6 +252,23 @@ always @(posedge adc_clk_i) begin
     end
 
 end
+//
+//always @(posedge adc_clk_i) begin
+//    if (sys_addr[19:0] == {logger_wp_offset, logger_wp}) begin
+//        sys_ack <= sys_en;
+//        sys_rdata <= {{32- MEM{1'b0}}, logger_data};
+//
+//    end
+//end
+
+always @(posedge adc_clk_i) begin
+   logger_raddr   <= sys_addr[RSZ+1:2] ; // address synchronous to clock
+   logger_data    <= logger_data_buf[logger_raddr] ;
+end
+
+//always @(posedge adc_clk_i) begin
+//    logger_raddr <= sys_addr[
+//end
 
 
 // System bus
@@ -294,10 +337,15 @@ always @(posedge adc_clk_i)
 
             20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
 
-            20'h10000: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd0}     ; end
-            20'h10004: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd1}     ; end
-            20'h10008: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd2}     ; end
-            20'h1000c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd3}     ; end
+            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd0}     ; end
+
+            20'h1????: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              logger_data}     ; end
+
+
+//            20'h10000: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd0}     ; end
+//            20'h10004: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd1}     ; end
+//            20'h10008: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd2}     ; end
+//            20'h1000c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd3}     ; end
 
             default:   begin sys_ack <= sys_en;  sys_rdata <= 32'h0                                 ; end
         endcase

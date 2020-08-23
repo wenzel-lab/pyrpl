@@ -25,18 +25,26 @@ int main(int argc, char **argv) {
     int fd = -1;
     int ret_val = EXIT_SUCCESS;
 
-    unsigned long address = 0x40600000;
+//    unsigned long address_base = 0x40600110;
+    unsigned long address_base = 0x40610000;
+    unsigned long address_offset = 0x0;
+    unsigned long address;
+    unsigned long buffer_length = 0xf;
+    unsigned long address_alignment = 0x4;
 
-    while ()
     if((fd = open("/dev/mem", O_RDONLY)) == -1) FATAL;
-    map_base = mmap(0, MAP_SIZE, PROT_READ, MAP_SHARED, fd, address & ~MAP_MASK);
+    map_base = mmap(0, MAP_SIZE, PROT_READ, MAP_SHARED, fd, address_base & ~MAP_MASK);
     if(map_base == (void *) -1) FATAL;
 
-    void* virt_addr = map_base + (address & MAP_MASK);
-	uint32_t read_result = 0;
-	read_result = *((uint32_t *) virt_addr);
-	printf("0x%08x\n", read_result);
-	fflush(stdout);
+    while (1==1) {
+        address_offset = (address_offset + address_alignment) % buffer_length;
+        address = address_base + address_offset;
+        void* virt_addr = map_base + (address & MAP_MASK);
+        uint32_t read_result = 0;
+        read_result = *((uint32_t *) virt_addr);
+        printf("0x%08x : 0x%08x\n", address, read_result);
+        fflush(stdout);
+	}
 
     if (map_base != (void*)(-1)) {
 		if(munmap(map_base, MAP_SIZE) == -1) FATAL;
