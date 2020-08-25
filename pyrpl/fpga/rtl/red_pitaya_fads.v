@@ -101,7 +101,7 @@ reg [4-1:0] state = 4'h0;
 
 // Logger Buffer
 //reg [20 -1:0] logger_wp_offset = 4'h1;
-reg [BUFL-1:0] logger_wp;
+reg [BUFL-1:0] logger_wp = 4'h0;
 
 //reg [16 -1:0] logger_rp     = 16'b0;
 //reg [16 -1:0] buffer_length = 16'b1;
@@ -146,7 +146,7 @@ always @(posedge adc_clk_i) begin
 //                logger_data_buf[i] <= 0;
 //            end
 
-            logger_wp <= {BUFL{1'b0}};
+//            logger_wp <= {BUFL{1'b0}};
 
             if (droplet_acquisition_enable) begin
                 state <= 4'h1;
@@ -210,7 +210,7 @@ always @(posedge adc_clk_i) begin
         logger_data_buf[logger_wp] <= droplet_width_counter;
         // incrementing write pointer
 //        logger_wp <= (logger_wp + ALIG) % BUFL;
-        logger_wp <= logger_wp + 1;
+        logger_wp <= logger_wp + 4'b0001;
 
         // State
 
@@ -343,7 +343,7 @@ always @(posedge adc_clk_i)
 
             20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
 
-            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd0}     ; end
+            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},                logger_wp}     ; end
 
             20'h1000?: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              logger_data}     ; end
 
