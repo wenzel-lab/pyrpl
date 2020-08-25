@@ -30,11 +30,11 @@ int main(int argc, char **argv) {
 //    unsigned long address_base =   0x40110000;
     unsigned long buffer_offset =  0x00010000;
     unsigned long wp_address =     0x1000;
-    unsigned long address_offset = 0x0;
+    unsigned long buf_tail = 0x0;
     unsigned long address;
-    unsigned long buffer_length = 0x10;
     unsigned long address_alignment = 0x4;
-    int n_buffer_filled = 0;
+    unsigned long buffer_length = 0x10;
+    unsigned long n_buffer_filled = 0x0;
 
     if((fd = open("/dev/mem", O_RDONLY)) == -1) FATAL;
     map_base = mmap(0, MAP_SIZE, PROT_READ, MAP_SHARED, fd, address_base & ~MAP_MASK);
@@ -43,21 +43,21 @@ int main(int argc, char **argv) {
     while (1==1) {
         // Get current write pointer from FPGA
         void* wp_virt_address = map_base + (wp_address & MAP_MASK);
-        uint32_t wp_read_result = 0;
-        wp_read_result = *((uint32_t *) wp_virt_address);
+        uint32_t buf_head = 0;
+        buf_head = *((uint32_t *) wp_virt_address);
 
-//        printf("ADDR: 0x%08x -> 0x%08x\n", wp_address, wp_read_result);
+//        printf("ADDR: 0x%08x -> 0x%08x\n", wp_address, buf_head);
 
-        n_buffer_filled = wp_read_result + buffer_length - address_offset;
+        n_buffer_filled = (buf_head - buf_tail + buffer_length) / address_alignment;
 
         // Check if caught up to wp
-        if (n_buffer_filled > 0) {
-            address_offset = (address_offset + address_alignment) % buffer_length;
-            address = address_base + buffer_offset + address_offset;
+        if (n_buffer_filled > 1) {
+            buf_tail = (buf_tail + address_alignment) % buffer_length;
+            address = address_base + buffer_offset + buf_tail;
             void* virt_addr = map_base + (address & MAP_MASK);
             uint32_t buf_read_result = 0;
             buf_read_result = *((uint32_t *) virt_addr);
-            printf("BUF: %04d WP: 0x%08x CUR ADDR: 0x%08x -> 0x%08x\n", n_buffer_filled, wp_read_result, address, buf_read_result);
+            printf("BUF: 0x%08x Head: 0x%08x Tail: 0x%08x CUR ADDR: 0x%08x -> 0x%08x\n", n_buffer_filled, buf_head, buf_tail, address, buf_read_result);
         }
         fflush(stdout);
 	}

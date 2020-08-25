@@ -106,7 +106,7 @@ reg [BUFL-1:0] logger_wp = 4'h0;
 //reg [16 -1:0] logger_rp     = 16'b0;
 //reg [16 -1:0] buffer_length = 16'b1;
 
-reg [MEM-1:0] logger_data_buf [0:BUFL-1];
+reg [MEM-1:0] logger_data_buf [BUFL-1:0];
 reg [MEM-1:0] logger_data;
 reg [BUFL-1:0] logger_raddr;
 
@@ -209,8 +209,8 @@ always @(posedge adc_clk_i) begin
         // getting log data
         logger_data_buf[logger_wp] <= droplet_width_counter;
         // incrementing write pointer
-//        logger_wp <= (logger_wp + ALIG) % BUFL;
-        logger_wp <= logger_wp + 4'b0001;
+        logger_wp <= (logger_wp + ALIG) % BUFL;
+//        logger_wp <= logger_wp + 4'b0001;
 
         // State
 
