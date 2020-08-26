@@ -16,7 +16,7 @@ module red_pitaya_fads #(
     parameter ALIG = 4'h4, // RAM alignment
 //    parameter BUFL = (1<<RSZ)   // fads logger buffer length
 //    parameter BUFL = 8'h10   // fads logger buffer length
-    parameter BUFL = 4   // fads logger buffer length
+//    parameter BUFL = 4   // fads logger buffer length
 //    parameter signed low_threshold  = 14'b00000000001111,
 //    parameter signed high_threshold = 14'b00000011111111
 )(
@@ -102,16 +102,16 @@ reg [4-1:0] state = 4'h0;
 
 // Logger Buffer
 //reg [20 -1:0] logger_wp_offset = 4'h1;
-reg [BUFL-1:0] logger_wp = 4'h0;
-reg [BUFL-1:0] logger_wp_cur = 4'h0;
+//reg [BUFL-1:0] logger_wp = 4'h0;
+//reg [BUFL-1:0] logger_wp_cur = 4'h0;
 
 //reg [16 -1:0] logger_rp     = 16'b0;
 //reg [16 -1:0] buffer_length = 16'b1;
 
 //reg [MEM-1:0] logger_data_buf [BUFL-1:0];
-reg [MEM-1:0] logger_data_buf [0:(1<<BUFL)-1];
-reg [MEM-1:0] logger_data;
-reg [BUFL-1:0] logger_raddr;
+//reg [MEM-1:0] logger_data_buf [0:(1<<BUFL)-1];
+//reg [MEM-1:0] logger_data;
+//reg [BUFL-1:0] logger_raddr;
 
 
 // Assigning
@@ -128,9 +128,9 @@ assign     high_width =  droplet_width_counter >= high_width_threshold;
 
 
 //integer i;
-always @(posedge adc_clk_i) begin
-    logger_wp_cur <= logger_wp;
-end
+//always @(posedge adc_clk_i) begin
+//    logger_wp_cur <= logger_wp;
+//end
 
 always @(posedge adc_clk_i) begin
     // Debug
@@ -226,11 +226,11 @@ always @(posedge adc_clk_i) begin
 
         // Logging
         // getting log data
-        logger_data_buf[logger_wp] <= positive_droplets + negative_droplets;
+//        logger_data_buf[logger_wp] <= positive_droplets + negative_droplets;
         // incrementing write pointer
 //        logger_wp <= (logger_wp + ALIG) % BUFL;
 //        logger_wp <= logger_wp + 4'b0001;
-        logger_wp <= logger_wp + 1;
+//        logger_wp <= logger_wp + 1;
 
         // State
 
@@ -287,10 +287,10 @@ end
 //    end
 //end
 
-always @(posedge adc_clk_i) begin
-   logger_raddr   <= sys_addr[BUFL+1:2] ; // address synchronous to clock
-   logger_data    <= logger_data_buf[logger_raddr] ;
-end
+//always @(posedge adc_clk_i) begin
+//   logger_raddr   <= sys_addr[BUFL+1:2] ; // address synchronous to clock
+//   logger_data    <= logger_data_buf[logger_raddr] ;
+//end
 
 //always @(posedge adc_clk_i) begin
 //    logger_raddr <= sys_addr[
@@ -363,9 +363,9 @@ always @(posedge adc_clk_i)
 
             20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
 
-            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},            logger_wp_cur}     ; end
+//            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},            logger_wp_cur}     ; end
 
-            20'h100??: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              logger_data}     ; end
+//            20'h100??: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              logger_data}     ; end
 
 
 //            20'h10000: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd0}     ; end
