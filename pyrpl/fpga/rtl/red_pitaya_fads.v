@@ -16,7 +16,7 @@ module red_pitaya_fads #(
     parameter ALIG = 4'h4, // RAM alignment
 //    parameter BUFL = (1<<RSZ)   // fads logger buffer length
 //    parameter BUFL = 8'h10   // fads logger buffer length
-    parameter BUFL = (1<<4)   // fads logger buffer length
+    parameter BUFL = 4   // fads logger buffer length
 //    parameter signed low_threshold  = 14'b00000000001111,
 //    parameter signed high_threshold = 14'b00000011111111
 )(
@@ -107,7 +107,7 @@ reg [BUFL-1:0] logger_wp = 4'h0;
 //reg [16 -1:0] buffer_length = 16'b1;
 
 //reg [MEM-1:0] logger_data_buf [BUFL-1:0];
-reg [MEM-1:0] logger_data_buf [0:BUFL-1];
+reg [MEM-1:0] logger_data_buf [0:(1<<BUFL)-1];
 reg [MEM-1:0] logger_data;
 reg [BUFL-1:0] logger_raddr;
 
@@ -211,7 +211,8 @@ always @(posedge adc_clk_i) begin
         logger_data_buf[logger_wp] <= positive_droplets;
         // incrementing write pointer
 //        logger_wp <= (logger_wp + ALIG) % BUFL;
-        logger_wp <= logger_wp + 4'b0001;
+//        logger_wp <= logger_wp + 4'b0001;
+        logger_wp <= logger_wp + 1;
 
         // State
 

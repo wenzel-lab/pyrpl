@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     uint32_t address;
     uint32_t address_alignment = 0x4;
     uint32_t buffer_length = 0x10;
-    uint32_t n_buffer_filled = 0x0;
+    uint32_t n_buffer_filled;
 
     if((fd = open("/dev/mem", O_RDONLY)) == -1) FATAL;
     map_base = mmap(0, MAP_SIZE, PROT_READ, MAP_SHARED, fd, address_base & ~MAP_MASK);
@@ -48,12 +48,14 @@ int main(int argc, char **argv) {
 
 //        printf("ADDR: 0x%08x -> 0x%08x\n", wp_address, buf_head);
 
-        n_buffer_filled = (buf_head - buf_tail + buffer_length) / address_alignment;
+        n_buffer_filled = buf_head - buf_tail + buffer_length - 1;
 
         // Check if caught up to wp
-        if (n_buffer_filled > 1) {
-            buf_tail = (buf_tail + address_alignment) % buffer_length;
-            address = address_base + buffer_offset + buf_tail;
+        if (buf_head - buf_tail != 0) {
+//        if (n_buffer_filled > 1) {
+//        if (1 == 1) {
+            buf_tail = (buf_tail + 1) % buffer_length;
+            address = address_base + buffer_offset + (buf_tail * address_alignment);
             void* virt_addr = map_base + (address & MAP_MASK);
             uint32_t buf_read_result = 0;
             buf_read_result = *((uint32_t *) virt_addr);
