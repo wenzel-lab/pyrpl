@@ -118,13 +118,13 @@ reg [4-1:0] state = 4'h0;
 assign      min_intensity = adc_a_i >= min_intensity_threshold;
 
 assign      low_intensity = (droplet_intensity_max >=   min_intensity_threshold) && (droplet_intensity_max < low_intensity_threshold);
-assign positive_intensity = (droplet_intensity_max >=   low_intensity_threshold) && (droplet_intensity_max < high_intensity_threshold);
+assign positive_intensity = (droplet_intensity_max >=   low_intensity_threshold) && (droplet_intensity_max < high_intensity_threshold) && min_intensity;
 assign     high_intensity =  droplet_intensity_max >=  high_intensity_threshold;
 
 assign      min_width =  droplet_width_counter >=  min_width_threshold;
 assign      low_width = (droplet_width_counter >=  min_width_threshold) && (droplet_width_counter <  low_width_threshold);
-assign positive_width = (droplet_width_counter >=  low_width_threshold) && (droplet_width_counter < high_width_threshold);
-assign     high_width =  droplet_width_counter >= high_width_threshold;
+assign positive_width = (droplet_width_counter >=  low_width_threshold) && (droplet_width_counter < high_width_threshold) && min_width;
+assign     high_width =  droplet_width_counter >= high_width_threshold && min_width;
 
 
 //integer i;
