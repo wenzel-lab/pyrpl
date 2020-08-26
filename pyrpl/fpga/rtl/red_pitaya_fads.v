@@ -148,6 +148,16 @@ always @(posedge adc_clk_i) begin
     if (state == 4'h0) begin
         if (fads_reset) begin
             state <= 4'h0;
+
+            negative_droplets       <= 32'd0;
+            positive_droplets       <= 32'd0;
+
+            low_intensity_droplets  <= 32'd0;
+            high_intensity_droplets <= 32'd0;
+
+            short_droplets          <= 32'd0;
+            long_droplets           <= 32'd0;
+
         end else begin
 //            for (i=0; i<BUFL; i=i+1) begin
 //                logger_data_buf[i] <= 0;
