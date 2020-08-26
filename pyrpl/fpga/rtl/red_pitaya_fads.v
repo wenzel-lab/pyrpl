@@ -13,7 +13,7 @@ module red_pitaya_fads #(
     parameter RSZ = 14, // RAM size: 2^RSZ,
     parameter DWT = 14, // data width thresholds
     parameter MEM = 32,  // data width RAM
-    parameter ALIG = 4'h4, // RAM alignment
+    parameter ALIG = 4'h4 // RAM alignment
 //    parameter BUFL = (1<<RSZ)   // fads logger buffer length
 //    parameter BUFL = 8'h10   // fads logger buffer length
 //    parameter BUFL = 4   // fads logger buffer length
@@ -62,6 +62,12 @@ reg [MEM -1:0]  long_droplets = 32'd0;
 
 reg [MEM -1:0] positive_droplets = 32'd0;
 reg [MEM -1:0] negative_droplets = 32'd0;
+
+// Output registers
+reg [MEM -1:0] droplet_id = 32'd0;
+
+reg [MEM -1:0] cur_droplet_intensity = 32'd0;
+reg [MEM -1:0] cur_droplet_width = 32'd0;
 
 
 // State machine
@@ -158,6 +164,10 @@ always @(posedge adc_clk_i) begin
             short_droplets          <= 32'd0;
             long_droplets           <= 32'd0;
 
+            droplet_id              <= 32'd0;
+            cur_droplet_intensity   <= 32'd0;
+            cur_droplet_width       <= 32'd0;
+
         end else begin
 //            for (i=0; i<BUFL; i=i+1) begin
 //                logger_data_buf[i] <= 0;
@@ -207,6 +217,10 @@ always @(posedge adc_clk_i) begin
 
     // Evaluating Droplet | 3
     if (state == 4'h3) begin
+        droplet_id <= droplet_id + 32'd1;
+        cur_droplet_width <= droplet_width_counter;
+        cur_droplet_intensity <= droplet_intensity_max;
+
         if (positive_intensity && positive_width)
             positive_droplets <= positive_droplets + 32'd1;
         else
@@ -362,6 +376,10 @@ always @(posedge adc_clk_i)
             20'h0010c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},            long_droplets}     ; end
 
             20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
+
+            20'h00200: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},               droplet_id}     ; end
+            20'h00204: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity}     ; end
+            20'h00208: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width}     ; end
 
 //            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},            logger_wp_cur}     ; end
 
