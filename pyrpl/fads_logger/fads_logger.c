@@ -48,13 +48,18 @@ int main(int argc, char **argv) {
 
 //        printf("ADDR: 0x%08x -> 0x%08x\n", wp_address, buf_head);
 
+        // Calculate buffer fill status
         n_buffer_filled = buf_head - buf_tail + buffer_length - 1;
 
-        // Check if caught up to wp
+        // Only check if reader (tail) caught up to writer (head, FPGA)
         if (buf_head - buf_tail != 0) {
 //        if (n_buffer_filled > 1) {
 //        if (1 == 1) {
+
+            // Increment tail address (with wrap modulo for ring buffer)
             buf_tail = (buf_tail + 1) % buffer_length;
+
+            // Build address from tail index and read out memory location
             address = address_base + buffer_offset + (buf_tail * address_alignment);
             void* virt_addr = map_base + (address & MAP_MASK);
             uint32_t buf_read_result = 0;

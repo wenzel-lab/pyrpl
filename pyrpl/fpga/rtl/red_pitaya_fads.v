@@ -61,6 +61,7 @@ reg [MEM -1:0] short_droplets = 32'd0;
 reg [MEM -1:0]  long_droplets = 32'd0;
 
 reg [MEM -1:0] positive_droplets = 32'd0;
+reg [MEM -1:0] negative_droplets = 32'd0;
 
 
 // State machine
@@ -102,6 +103,7 @@ reg [4-1:0] state = 4'h0;
 // Logger Buffer
 //reg [20 -1:0] logger_wp_offset = 4'h1;
 reg [BUFL-1:0] logger_wp = 4'h0;
+reg [BUFL-1:0] logger_wp_cur = 4'h0;
 
 //reg [16 -1:0] logger_rp     = 16'b0;
 //reg [16 -1:0] buffer_length = 16'b1;
@@ -125,7 +127,11 @@ assign positive_width = (droplet_width_counter >=  low_width_threshold) && (drop
 assign     high_width =  droplet_width_counter >= high_width_threshold;
 
 
-integer i;
+//integer i;
+always @(posedge adc_clk_i) begin
+    logger_wp_cur <= logger_wp;
+end
+
 always @(posedge adc_clk_i) begin
     // Debug
     case (state)
@@ -193,6 +199,8 @@ always @(posedge adc_clk_i) begin
     if (state == 4'h3) begin
         if (positive_intensity && positive_width)
             positive_droplets <= positive_droplets + 32'd1;
+        else
+            negative_droplets <= negative_droplets + 32'd1;
 
         if (low_intensity)
             low_intensity_droplets <= low_intensity_droplets + 32'd1;
@@ -208,7 +216,7 @@ always @(posedge adc_clk_i) begin
 
         // Logging
         // getting log data
-        logger_data_buf[logger_wp] <= positive_droplets;
+        logger_data_buf[logger_wp] <= positive_droplets + negative_droplets;
         // incrementing write pointer
 //        logger_wp <= (logger_wp + ALIG) % BUFL;
 //        logger_wp <= logger_wp + 4'b0001;
@@ -345,7 +353,7 @@ always @(posedge adc_clk_i)
 
             20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
 
-            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},                logger_wp}     ; end
+            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},            logger_wp_cur}     ; end
 
             20'h100??: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              logger_data}     ; end
 
