@@ -97,6 +97,7 @@ wire     high_width;
 // Eval
 wire droplet_positive;
 wire droplet_negative;
+reg [8 -1:0] droplet_classification;
 
 // Maintenance
 reg droplet_acquisition_enable = 1'b1;
@@ -218,6 +219,7 @@ always @(posedge adc_clk_i) begin
         else begin
             if (!min_intensity) begin
                 state <= 4'h3;
+                droplet_classification <= 8'd0;
             end
         end
     end
@@ -232,24 +234,38 @@ always @(posedge adc_clk_i) begin
         end
 
         // Update droplet counters
-        if (droplet_positive)
+        if (droplet_positive) begin
             positive_droplets <= positive_droplets + 32'd1;
-        else begin
+            droplet_classification <= droplet_classification | 8'b10000000;
+        end else begin
             if (droplet_negative)
                 negative_droplets <= negative_droplets + 32'd1;
         end
 
-        if (low_intensity)
+        if (low_intensity) begin
             low_intensity_droplets <= low_intensity_droplets + 32'd1;
+            droplet_classification <= droplet_classification | 8'b00000001;
 
-        if (high_intensity)
+        if (positive_intensity)
+            droplet_classification <= droplet_classification | 8'b00000010;
+
+        if (high_intensity) begin
             high_intensity_droplets <= high_intensity_droplets + 32'd1;
+            droplet_classification <= droplet_classification | 8'b00000100;
+        end
 
-        if (low_width)
+        if (low_width) begin
             short_droplets <= short_droplets + 32'd1;
+            droplet_classification <= droplet_classification | 8'b00001000;
+        end
 
-        if (high_width)
+        if (positive_width)
+            droplet_classification <= droplet_classification | 8'b00010000;
+
+        if (high_width) begin
             long_droplets <= long_droplets + 32'd1;
+            droplet_classification <= droplet_classification | 8'b00100000;
+        end
 
         // Logging
         // getting log data
@@ -393,6 +409,7 @@ always @(posedge adc_clk_i)
             20'h00200: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},               droplet_id}     ; end
             20'h00204: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity}     ; end
             20'h00208: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width}     ; end
+            20'h0020c: begin sys_ack <= sys_en;  sys_rdata <= {{32-   8{1'b0}},   droplet_classification}     ; end
 
 //            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},            logger_wp_cur}     ; end
 

@@ -18,7 +18,7 @@
 #define MAP_SIZE 131072UL
 #define MAP_MASK (MAP_SIZE - 1)
 
-#define N_OUTPUT_PARAMETERS 3
+#define N_OUTPUT_PARAMETERS 4
 #define INTENSITY_MAX_FACTOR 0.002441406
 
 #define SAMPLE_RATE 125000
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 //    uint32_t buffer_offset =  0x00010000;
 //    uint32_t wp_address =     0x1000;
 //    uint32_t buf_tail = 0x0;
-    uint32_t address;
+//    uint32_t address;
     uint32_t output[N_OUTPUT_PARAMETERS];
     double intensity;
     double width;
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
         if (last_id != output[0]) {
 //            fprintf(fp, "%12u\t%12f\t%12d\n", output[0], (double) (output[1] * INTENSITY_MAX_FACTOR) / , output[2]);
-            printf("%12u\t%12d\t%f\t%12u\t%f\n", output[0], output[1], intensity, output[2], width);
+            printf("%12u\t%12d\t%f\t%12u\t%f\t%3\n", output[0], output[1], intensity, output[2], width, output[3]);
         }
 
         last_id = output[0];
