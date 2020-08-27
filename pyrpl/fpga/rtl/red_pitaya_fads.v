@@ -94,6 +94,10 @@ wire     high_width;
 //reg positive_width_reg = 1'b0;
 //reg     high_width_reg = 1'b0;
 
+// Eval
+wire droplet_positive;
+wire droplet_negative;
+
 // Maintenance
 reg droplet_acquisition_enable = 1'b1;
 reg sort_enable = 1'b1;
@@ -131,6 +135,9 @@ assign      min_width =  droplet_width_counter >=  min_width_threshold;
 assign      low_width = (droplet_width_counter >=  min_width_threshold) && (droplet_width_counter <  low_width_threshold);
 assign positive_width = (droplet_width_counter >=  low_width_threshold) && (droplet_width_counter < high_width_threshold) && min_width;
 assign     high_width =  droplet_width_counter >= high_width_threshold && min_width;
+
+assign droplet_positive = positive_intensity && positive_width;
+assign droplet_negative = low_intensity || high_intensity || low_width || high_width;
 
 
 //integer i;
@@ -217,19 +224,25 @@ always @(posedge adc_clk_i) begin
 
     // Evaluating Droplet | 3
     if (state == 4'h3) begin
-        droplet_id <= droplet_id + 32'd1;
-        cur_droplet_width <= droplet_width_counter;
-        cur_droplet_intensity <= droplet_intensity_max;
+        // Update output
+        if (droplet_positive || droplet_negative) begin
+            droplet_id <= droplet_id + 32'd1;
+            cur_droplet_width <= droplet_width_counter;
+            cur_droplet_intensity <= droplet_intensity_max;
+        end
 
-        if (positive_intensity && positive_width)
+        // Update droplet counters
+        if (droplet_positive)
             positive_droplets <= positive_droplets + 32'd1;
-        else
-            negative_droplets <= negative_droplets + 32'd1;
+        else begin
+            if (droplet_negative)
+                negative_droplets <= negative_droplets + 32'd1;
+        end
 
         if (low_intensity)
             low_intensity_droplets <= low_intensity_droplets + 32'd1;
 
-        if (high_intensity_droplets)
+        if (high_intensity)
             high_intensity_droplets <= high_intensity_droplets + 32'd1;
 
         if (low_width)
