@@ -236,7 +236,7 @@ always @(posedge adc_clk_i) begin
         // Update droplet counters
         if (droplet_positive) begin
             positive_droplets <= positive_droplets + 32'd1;
-            droplet_classification <= droplet_classification | 8'b10000000;
+            droplet_classification[7] <= 1;
         end else begin
             if (droplet_negative)
                 negative_droplets <= negative_droplets + 32'd1;
@@ -244,27 +244,28 @@ always @(posedge adc_clk_i) begin
 
         if (low_intensity) begin
             low_intensity_droplets <= low_intensity_droplets + 32'd1;
-            droplet_classification <= droplet_classification | 8'b00000001;
+            droplet_classification[0] <= 1;
+        end
 
         if (positive_intensity)
-            droplet_classification <= droplet_classification | 8'b00000010;
+            droplet_classification[1] <= 1;
 
         if (high_intensity) begin
             high_intensity_droplets <= high_intensity_droplets + 32'd1;
-            droplet_classification <= droplet_classification | 8'b00000100;
+            droplet_classification[2] <= 1;
         end
 
         if (low_width) begin
             short_droplets <= short_droplets + 32'd1;
-            droplet_classification <= droplet_classification | 8'b00001000;
+            droplet_classification[3] <= 1;
         end
 
         if (positive_width)
-            droplet_classification <= droplet_classification | 8'b00010000;
+            droplet_classification[4] <= 1;
 
         if (high_width) begin
             long_droplets <= long_droplets + 32'd1;
-            droplet_classification <= droplet_classification | 8'b00100000;
+            droplet_classification[5] <= 1;
         end
 
         // Logging
