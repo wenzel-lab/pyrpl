@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
         if (last_id != output[0]) {
 //            fprintf(fp, "%12u\t%12f\t%12d\n", output[0], (double) (output[1] * INTENSITY_MAX_FACTOR) / , output[2]);
-            printf("%12u\t%12d\t%f\t%12u\t%f\t%3\n", output[0], output[1], intensity, output[2], width, output[3]);
+            printf("%12u\t%12d\t%f\t%12u\t%f\t%3u\n", output[0], output[1], intensity, output[2], width, output[3]);
         }
 
         last_id = output[0];
