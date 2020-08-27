@@ -18,7 +18,7 @@
 #define MAP_SIZE 131072UL
 #define MAP_MASK (MAP_SIZE - 1)
 
-#define N_OUTPUT_PARAMETERS 4
+#define N_OUTPUT_PARAMETERS 5
 #define INTENSITY_MAX_FACTOR 0.002441406
 
 #define SAMPLE_RATE 125000
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
         if (last_id != output[0]) {
 //            fprintf(fp, "%12u\t%12f\t%12d\n", output[0], (double) (output[1] * INTENSITY_MAX_FACTOR) / , output[2]);
-            printf("%12u\t%12d\t%f\t%12u\t%f\t%3u\n", output[0], output[1], intensity, output[2], width, output[3]);
+            printf("%12u\t%12d\t%f\t%12u\t%f\t%3u\t%12u\n", output[0], output[1], intensity, output[2], width, output[3], output[4]);
         }
 
         last_id = output[0];

@@ -52,6 +52,9 @@ reg [MEM -1:0] high_width_threshold;
 
 // Registers for timers
 reg [MEM -1:0] droplet_width_counter = 32'd0;
+reg [MEM -1:0] general_timer_us = 32'd0;
+reg [8   -1:0] general_timer_counter = 8'd0;
+
 
 // Registers for droplet counters;
 reg [MEM -1:0]  low_intensity_droplets = 32'd0;
@@ -68,6 +71,7 @@ reg [MEM -1:0] droplet_id = 32'd0;
 
 reg [MEM -1:0] cur_droplet_intensity = 32'd0;
 reg [MEM -1:0] cur_droplet_width = 32'd0;
+reg [MEM -1:0] cur_time_us = 32'd0;
 
 
 // State machine
@@ -146,6 +150,20 @@ assign droplet_negative = (low_intensity || high_intensity || positive_intensity
 //always @(posedge adc_clk_i) begin
 //    logger_wp_cur <= logger_wp;
 //end
+
+always @(posedge adc_clk_i) begin
+    if (fads_reset) begin
+        general_timer_counter <= 8'd0;
+        general_timer_us <= 32'd0;
+    end else begin
+        general_timer_counter <= general_timer_counter + 8'd1;
+        if (general_timer_counter >= 8'd125) begin
+            general_timer_us <= general_timer_us + 32'd1;
+            general_timer_counter <= 8'd0;
+        end
+    end
+end
+
 
 always @(posedge adc_clk_i) begin
     // Debug
@@ -232,6 +250,7 @@ always @(posedge adc_clk_i) begin
             droplet_id <= droplet_id + 32'd1;
             cur_droplet_width <= droplet_width_counter;
             cur_droplet_intensity <= droplet_intensity_max;
+            cur_time_us <= general_timer_us;
         end
 
         // Update droplet counters
@@ -412,6 +431,7 @@ always @(posedge adc_clk_i)
             20'h00204: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity}     ; end
             20'h00208: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width}     ; end
             20'h0020c: begin sys_ack <= sys_en;  sys_rdata <= {{32-   8{1'b0}},   droplet_classification}     ; end
+            20'h00210: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              cur_time_us}     ; end
 
 //            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},            logger_wp_cur}     ; end
 
