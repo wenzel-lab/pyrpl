@@ -16,8 +16,8 @@ LOG=2>&1 | tee -a fpga.log
 # hsi (hardware software interface) provides software integration
 # both tools are run in batch mode with an option to avoid log/journal files
 # VIVADO = vivado -nolog -nojournal -mode batch
-VIVADO = /opt/Xilinx/Vivado/2019.2/bin/vivado -nolog -mode batch
-VIVADO_SETTINGS = /tools/Xilinx/Vivado/2019.2/settings64.sh
+VIVADO = /opt/Xilinx/Vivado/2023.2/bin/vivado -nolog -mode batch
+VIVADO_SETTINGS = /opt/Xilinx/Vivado/2023.2/settings64.sh 
 
 all: clean $(FPGA_BIN) postclean_keeplog
 

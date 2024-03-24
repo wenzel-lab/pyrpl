@@ -9,7 +9,7 @@
 # Initialize Vivado
 ################################################################################
 
-set_param general.maxThreads 24
+set_param general.maxThreads 12
 
 ################################################################################
 # define paths
@@ -32,6 +32,7 @@ file mkdir $path_sdk
 set part xc7z010clg400-1
 
 create_project -in_memory -part $part
+#create_project openfads ./openfads -part $part
 
 # experimental attempts to avoid a warning
 #get_projects
@@ -62,7 +63,9 @@ write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 # template
 #read_verilog                      $path_rtl/...
 
-read_verilog                      .srcs/sources_1/bd/system/hdl/system_wrapper.v
+read_verilog                      .gen/sources_1/bd/system/hdl/system_wrapper.v
+
+#exit
 
 read_verilog                      $path_rtl/axi_master.v
 read_verilog                      $path_rtl/axi_slave.v

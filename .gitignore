@@ -126,3 +126,6 @@ scripts/pyrpl.spec
 /pyrpl/fpga/out/
 /pyrpl/fpga/tight_setup_hold_pins.txt
 /pyrpl/fpga/vivado*.jou
+pyrpl/fpga/clockInfo.txt
+pyrpl/fpga/ip/
+pyrpl/fpga/out
