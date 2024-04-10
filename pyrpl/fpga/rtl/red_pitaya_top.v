@@ -126,7 +126,12 @@ module red_pitaya_top (
    input  [ 5-1: 0] vinp_i             ,  // voltages p
    input  [ 5-1: 0] vinn_i             ,  // voltages n
    // Expansion connector
-   output           DIO1_P             ,
+   output           DIO1_P             ,  // fads trigger signal
+   
+   output           DIO2_P             ,  // address S0 MuxDAC Board Multiplexer
+   output           DIO3_P             ,  // address S1 MuxDAC Board Multiplexer
+   output           DIO4_P             ,  // address S2 MuxDAC Board Multiplexer
+
 //   inout  [ 8-1: 0] exp_p_io           ,
 //   inout  [ 8-1: 0] exp_n_io           ,
    // SATA connector
@@ -479,6 +484,12 @@ red_pitaya_scope i_scope (
 wire sort_trig;
 assign DIO1_P = sort_trig;
 
+wire [3-1: 0] mux_addr;
+assign DIO2_P = mux_addr[0];
+assign DIO3_P = mux_addr[1];
+assign DIO4_P = mux_addr[2];
+
+
 red_pitaya_fads i_fads(
     .adc_clk_i      (   adc_clk                     ),
     .adc_rstn_i     (   adc_rstn                    ),
@@ -497,6 +508,12 @@ red_pitaya_fads i_fads(
     .sys_err         (  sys_err[6]                 ),  // error indicator
     .sys_ack         (  sys_ack[6]                 )   // acknowledge signal
     );
+
+red_pitaya_mux i_mux(
+  .adc_clk_i        ( adc_clk),
+  .adc_rstn_i       ( adc_rstn_i),
+  .mux_addr         ( mux_addr)
+  );
 
 //---------------------------------------------------------------------------------
 //  DAC arbitrary signal generator

@@ -9,6 +9,36 @@ by an external high voltage amplifier to sort fluorescent droplets.
 
 */
 
+module red_pitaya_mux #(
+    parameter DWT = 14, // data width thresholds
+    parameter MEM = 32  // data width RAM
+)(
+    input adc_clk_i,
+    input adc_rstn_i,
+    output reg [3-1:0] mux_addr
+);
+
+reg [16   -1:0] mux_clock_counter = 16'd0;
+
+always @(posedge adc_clk_i) begin
+    if (adc_rstn_i) begin
+        mux_clock_counter <= 16'd0;
+    end else begin
+        mux_clock_counter <= mux_clock_counter + 16'd1;
+        if (mux_clock_counter >= 16'd125) begin
+            if (mux_addr >= 3'd1) begin
+                mux_addr <= 3'd0;
+            end else begin
+                mux_addr <= mux_addr + 3'd1;
+            end
+
+            mux_clock_counter <= 16'd0;            
+        end
+    end
+end
+
+endmodule
+
 module red_pitaya_fads #(
     parameter RSZ = 14, // RAM size: 2^RSZ,
     parameter DWT = 14, // data width thresholds
@@ -232,7 +262,7 @@ always @(posedge adc_clk_i) begin
         // Width
         droplet_width_counter <= droplet_width_counter + 32'd1;
 
-        // State
+        // State transition
         if (fads_reset)
                 state <= 4'h0;
         else begin
@@ -296,8 +326,8 @@ always @(posedge adc_clk_i) begin
 //        logger_wp <= logger_wp + 4'b0001;
 //        logger_wp <= logger_wp + 1;
 
-        // State
-
+        
+        // State transition
         if (fads_reset)
                 state <= 4'h0;
         else begin

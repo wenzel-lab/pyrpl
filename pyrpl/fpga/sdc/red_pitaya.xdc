@@ -144,6 +144,22 @@ set_property IOSTANDARD LVCMOS33 [get_ports {DIO1_P}]
 set_property SLEW       FAST     [get_ports {DIO1_P}]
 set_property DRIVE      8        [get_ports {DIO1_P}]
 set_property PACKAGE_PIN H16     [get_ports {DIO1_P}]
+
+
+set_property IOSTANDARD LVCMOS33 [get_ports {DIO2_P}]
+set_property SLEW       FAST     [get_ports {DIO2_P}]
+set_property DRIVE      8        [get_ports {DIO2_P}]
+set_property PACKAGE_PIN J18     [get_ports {DIO2_P}]
+
+set_property IOSTANDARD LVCMOS33 [get_ports {DIO3_P}]
+set_property SLEW       FAST     [get_ports {DIO3_P}]
+set_property DRIVE      8        [get_ports {DIO3_P}]
+set_property PACKAGE_PIN K17     [get_ports {DIO3_P}]
+
+set_property IOSTANDARD LVCMOS33 [get_ports {DIO4_P}]
+set_property SLEW       FAST     [get_ports {DIO4_P}]
+set_property DRIVE      8        [get_ports {DIO4_P}]
+set_property PACKAGE_PIN L14     [get_ports {DIO4_P}]
 # set_property IOSTANDARD LVCMOS33 [get_ports {exp_p_io[*]}]
 # set_property IOSTANDARD LVCMOS33 [get_ports {exp_n_io[*]}]
 # set_property SLEW       FAST     [get_ports {exp_p_io[*]}]
