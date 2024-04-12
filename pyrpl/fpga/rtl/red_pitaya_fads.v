@@ -9,55 +9,6 @@ by an external high voltage amplifier to sort fluorescent droplets.
 
 */
 
-module red_pitaya_mux #(
-    parameter CHNL = 6  // maximum number of detectors/channels
-)(
-    input adc_clk_i,
-    input adc_rstn_i,
-    input [CHNL-1:0] active_channels_i,
-    output reg [3-1:0] mux_addr_o
-);
-
-reg [16   -1:0] mux_clock_counter = 16'd0;
-reg [3-1:0] next_address;
-reg [CHNL-1:0] active_rot;
-reg next_address_found;
-integer i;
-
-always @(posedge adc_clk_i) begin
-    if (adc_rstn_i) begin
-        mux_clock_counter <= 16'd0;
-        mux_addr_o <= 3'd0;
-        next_address <= 3'd0;
-        next_address_found <= 0;
-    end else begin
-        mux_clock_counter <= mux_clock_counter + 16'd1;
-        if (mux_clock_counter >= 16'd125) begin
-            next_address_found = 0;
-            next_address = mux_addr_o;
-            active_rot = (active_channels_i >> mux_addr_o | active_channels_i << (CHNL - mux_addr_o));
-            for (i = 0; i < CHNL; i = i+1) begin
-                if (!next_address_found) begin
-                    next_address = next_address + 1;
-                    if (next_address >= CHNL) begin
-                        next_address = 0;
-                    end
-                    
-                    active_rot = (active_rot >> 1 | active_rot << (CHNL - 1));
-                    if (active_rot[0]) begin
-                        next_address_found = 1;
-                    end
-                end
-            end
-
-            mux_addr_o = next_address;
-            mux_clock_counter <= 16'd0;            
-        end
-    end
-end
-
-endmodule
-
 module red_pitaya_fads #(
     parameter RSZ = 14,     // RAM size: 2^RSZ,
     parameter DWT = 14,     // data width thresholds
@@ -71,14 +22,15 @@ module red_pitaya_fads #(
 //    parameter signed high_threshold = 14'b00000011111111
 )(
     // ADC
-    input                   adc_clk_i       ,   // ADC clock
-    input                   adc_rstn_i      ,   // ADC reset - active low
-    input signed [14-1: 0]  adc_a_i         ,   // ADC data CHA
+    input                   adc_clk_i           ,   // ADC clock
+    input                   adc_rstn_i          ,   // ADC reset - active low
+    input signed [14-1: 0]  adc_a_i             ,   // ADC data CHA
 //    input       [ 14-1: 0]  adc_b_i         ,   // ADC data CHB
+    input        [ 3-1: 0]  mux_addr_i          ,   // Current multiplexer address
 
-    output reg              sort_trig       ,   // Sorting trigger
-    output wire [3-1:0]     mux_addr_o      ,   // Multiplexer Address
-    output reg  [8-1:0]     debug           ,
+    output reg              sort_trig           ,   // Sorting trigger
+    output reg  [CHNL-1:0]  muxing_channels_o   ,   // Output of the currently active channels for the multiplexer
+    output reg  [8-1:0]     debug               ,   // At the moment the current state of the state machine
 
     // System bus
     input      [ 32-1: 0] sys_addr      ,  // bus address
@@ -94,10 +46,10 @@ module red_pitaya_fads #(
 // Registers that need to be added to system bus
 wire [CHNL-1:0] enabled_channels;
 wire [CHNL-1:0] droplet_sensing_channel;
-reg  [CHNL-1:0] muxing_channels;
+// reg  [CHNL-1:0] muxing_channels;
 
-assign enabled_channels        = 6'b101001;
-assign droplet_sensing_channel = 6'b101001;
+assign enabled_channels        = 6'b111111;
+assign droplet_sensing_channel = 6'b111111;
 
 // Registers for thresholds
 // need to be signed for proper comparison with negative voltages
@@ -240,6 +192,7 @@ always @(posedge adc_clk_i) begin
     if (state == 4'h0) begin
         if (fads_reset) begin
             state <= 4'h0;
+            muxing_channels_o <= 3'b0;
 
             negative_droplets       <= 32'd0;
             positive_droplets       <= 32'd0;
@@ -272,7 +225,7 @@ always @(posedge adc_clk_i) begin
         if (fads_reset)
                 state <= 4'h0;
         else begin
-            muxing_channels <= droplet_sensing_channel;
+            muxing_channels_o <= droplet_sensing_channel;
             if (min_intensity) begin
                 droplet_width_counter <= 32'd1;
                 droplet_intensity_max <= adc_a_i;
@@ -284,7 +237,7 @@ always @(posedge adc_clk_i) begin
 
     // Acquiring Droplet | 2
     if (state == 4'h2) begin
-        muxing_channels <= enabled_channels;
+        muxing_channels_o <= enabled_channels;
         // Intensity
         if (adc_a_i > droplet_intensity_max) begin
             droplet_intensity_max <= adc_a_i;
@@ -426,12 +379,12 @@ end
 //     mux_addr_o <= mux_addr;
 // end
 
-red_pitaya_mux i_mux(
-  .adc_clk_i            ( adc_clk_i        ),
-  .adc_rstn_i           ( adc_rstn_i       ),
-  .active_channels_i    ( enabled_channels  ),
-  .mux_addr_o           ( mux_addr_o       )
-  );
+// red_pitaya_mux i_mux(
+//   .adc_clk_i            ( adc_clk_i        ),
+//   .adc_rstn_i           ( adc_rstn_i       ),
+//   .active_channels_i    ( enabled_channels  ),
+//   .mux_addr_o           ( mux_addr_o       )
+//   );
 
 // System bus
 // setting up necessary wires

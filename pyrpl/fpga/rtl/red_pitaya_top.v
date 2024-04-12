@@ -489,28 +489,37 @@ assign DIO2_P = mux_addr[0];
 assign DIO3_P = mux_addr[1];
 assign DIO4_P = mux_addr[2];
 
+wire [6-1: 0] muxing_channels;
+
 // wire [6-1:0] active_channels;
 // assign active_channels = 6'b101001;
 
+red_pitaya_mux i_mux(
+  .adc_clk_i            ( adc_clk         ),
+  .adc_rstn_i           ( adc_rstn        ),
+  .active_channels_i    ( muxing_channels ),
+  .mux_addr_o           ( mux_addr        )
+  );
 
 red_pitaya_fads i_fads(
-    .adc_clk_i      (   adc_clk                     ),
-    .adc_rstn_i     (   adc_rstn                    ),
-    .adc_a_i        (   to_scope_a                  ),
-    .sort_trig      (   sort_trig                   ),
-    .mux_addr_o     (   mux_addr                    ),
-    .debug          (   led_o                       ),
-
-    // System bus
-    .sys_addr        (  sys_addr                   ),  // address
-    .sys_wdata       (  sys_wdata                  ),  // write data
-    .sys_sel         (  sys_sel                    ),  // write byte select
-    .sys_wen         (  sys_wen[6]                 ),  // write enable
-    .sys_ren         (  sys_ren[6]                 ),  // read enable
-    .sys_rdata       (  sys_rdata[ 6*32+31: 6*32]  ),  // read data
-    .sys_err         (  sys_err[6]                 ),  // error indicator
-    .sys_ack         (  sys_ack[6]                 )   // acknowledge signal
-    );
+  .adc_clk_i          ( adc_clk           ),
+  .adc_rstn_i         ( adc_rstn          ),
+  .adc_a_i            ( to_scope_a        ),
+  .mux_addr_i         ( mux_addr          ),
+  .muxing_channels_o  ( muxing_channels   ),
+  .sort_trig          ( sort_trig         ),
+  .debug              ( led_o             ),
+  
+  // System bus
+  .sys_addr           ( sys_addr                   ),  // address
+  .sys_wdata          ( sys_wdata                  ),  // write data
+  .sys_sel            ( sys_sel                    ),  // write byte select
+  .sys_wen            ( sys_wen[6]                 ),  // write enable
+  .sys_ren            ( sys_ren[6]                 ),  // read enable
+  .sys_rdata          ( sys_rdata[ 6*32+31: 6*32]  ),  // read data
+  .sys_err            ( sys_err[6]                 ),  // error indicator
+  .sys_ack            ( sys_ack[6]                 )   // acknowledge signal
+  );
 
 
 
