@@ -490,7 +490,7 @@ assign DIO3_P = mux_addr[1];
 assign DIO4_P = mux_addr[2];
 wire [6-1:0] active_channels;
 
-assign active_channels = 6'b001010;
+assign active_channels = 6'b101001;
 
 
 red_pitaya_fads i_fads(
