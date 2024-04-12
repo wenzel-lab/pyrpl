@@ -11,27 +11,48 @@ by an external high voltage amplifier to sort fluorescent droplets.
 
 module red_pitaya_mux #(
     parameter DWT = 14, // data width thresholds
-    parameter MEM = 32  // data width RAM
+    parameter MEM = 32, // data width RAM
+    parameter CHNL = 6  // maximum number of detectors/channels
 )(
     input adc_clk_i,
     input adc_rstn_i,
+    input [CHNL-1:0] active_channels,
     output reg [3-1:0] mux_addr
 );
 
 reg [16   -1:0] mux_clock_counter = 16'd0;
+reg [3-1:0] next_address;
+reg [CHNL-1:0] active_rot;
+reg next_address_found;
+integer i;
 
 always @(posedge adc_clk_i) begin
     if (adc_rstn_i) begin
         mux_clock_counter <= 16'd0;
+        mux_addr <= 3'd0;
+        next_address <= 3'd0;
+        next_address_found <= 0;
     end else begin
         mux_clock_counter <= mux_clock_counter + 16'd1;
         if (mux_clock_counter >= 16'd125) begin
-            if (mux_addr >= 3'd1) begin
-                mux_addr <= 3'd0;
-            end else begin
-                mux_addr <= mux_addr + 3'd1;
+            next_address_found = 0;
+            next_address = mux_addr;
+            active_rot = (active_channels >> mux_addr | active_channels << (CHNL - mux_addr));
+            for (i = 0; i < CHNL; i = i+1) begin
+                if (!next_address_found) begin
+                    next_address = next_address + 1;
+                    if (next_address >= CHNL) begin
+                        next_address = 0;
+                    end
+                    
+                    active_rot = (active_rot >> 1 | active_rot << (CHNL - 1));
+                    if (active_rot[0]) begin
+                        next_address_found = 1;
+                    end
+                end
             end
 
+            mux_addr = next_address;
             mux_clock_counter <= 16'd0;            
         end
     end
