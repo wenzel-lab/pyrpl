@@ -10,14 +10,12 @@ by an external high voltage amplifier to sort fluorescent droplets.
 */
 
 module red_pitaya_mux #(
-    parameter DWT = 14, // data width thresholds
-    parameter MEM = 32, // data width RAM
     parameter CHNL = 6  // maximum number of detectors/channels
 )(
     input adc_clk_i,
     input adc_rstn_i,
-    input [CHNL-1:0] active_channels,
-    output reg [3-1:0] mux_addr
+    input [CHNL-1:0] active_channels_i,
+    output reg [3-1:0] mux_addr_o
 );
 
 reg [16   -1:0] mux_clock_counter = 16'd0;
@@ -29,15 +27,15 @@ integer i;
 always @(posedge adc_clk_i) begin
     if (adc_rstn_i) begin
         mux_clock_counter <= 16'd0;
-        mux_addr <= 3'd0;
+        mux_addr_o <= 3'd0;
         next_address <= 3'd0;
         next_address_found <= 0;
     end else begin
         mux_clock_counter <= mux_clock_counter + 16'd1;
         if (mux_clock_counter >= 16'd125) begin
             next_address_found = 0;
-            next_address = mux_addr;
-            active_rot = (active_channels >> mux_addr | active_channels << (CHNL - mux_addr));
+            next_address = mux_addr_o;
+            active_rot = (active_channels_i >> mux_addr_o | active_channels_i << (CHNL - mux_addr_o));
             for (i = 0; i < CHNL; i = i+1) begin
                 if (!next_address_found) begin
                     next_address = next_address + 1;
@@ -52,7 +50,7 @@ always @(posedge adc_clk_i) begin
                 end
             end
 
-            mux_addr = next_address;
+            mux_addr_o = next_address;
             mux_clock_counter <= 16'd0;            
         end
     end
@@ -61,10 +59,11 @@ end
 endmodule
 
 module red_pitaya_fads #(
-    parameter RSZ = 14, // RAM size: 2^RSZ,
-    parameter DWT = 14, // data width thresholds
-    parameter MEM = 32,  // data width RAM
-    parameter ALIG = 4'h4 // RAM alignment
+    parameter RSZ = 14,     // RAM size: 2^RSZ,
+    parameter DWT = 14,     // data width thresholds
+    parameter MEM = 32,     // data width RAM
+    parameter CHNL = 6,     // maximum number of detectors/channels
+    parameter ALIG = 4'h4   // RAM alignment
 //    parameter BUFL = (1<<RSZ)   // fads logger buffer length
 //    parameter BUFL = 8'h10   // fads logger buffer length
 //    parameter BUFL = 4   // fads logger buffer length
@@ -78,7 +77,8 @@ module red_pitaya_fads #(
 //    input       [ 14-1: 0]  adc_b_i         ,   // ADC data CHB
 
     output reg              sort_trig       ,   // Sorting trigger
-    output reg [8-1:0]      debug           ,
+    output wire [3-1:0]     mux_addr_o      ,   // Multiplexer Address
+    output reg  [8-1:0]     debug           ,
 
     // System bus
     input      [ 32-1: 0] sys_addr      ,  // bus address
@@ -90,6 +90,14 @@ module red_pitaya_fads #(
     output reg            sys_err       ,  // bus error indicator
     output reg            sys_ack          // bus acknowledge signal
 );
+
+// Registers that need to be added to system bus
+wire [CHNL-1:0] enabled_channels;
+wire [CHNL-1:0] droplet_sensing_channel;
+reg  [CHNL-1:0] muxing_channels;
+
+assign enabled_channels        = 6'b101001;
+assign droplet_sensing_channel = 6'b101001;
 
 // Registers for thresholds
 // need to be signed for proper comparison with negative voltages
@@ -264,6 +272,7 @@ always @(posedge adc_clk_i) begin
         if (fads_reset)
                 state <= 4'h0;
         else begin
+            muxing_channels <= droplet_sensing_channel;
             if (min_intensity) begin
                 droplet_width_counter <= 32'd1;
                 droplet_intensity_max <= adc_a_i;
@@ -275,6 +284,7 @@ always @(posedge adc_clk_i) begin
 
     // Acquiring Droplet | 2
     if (state == 4'h2) begin
+        muxing_channels <= enabled_channels;
         // Intensity
         if (adc_a_i > droplet_intensity_max) begin
             droplet_intensity_max <= adc_a_i;
@@ -411,6 +421,17 @@ end
 //    logger_raddr <= sys_addr[
 //end
 
+// wire [3-1:0] mux_addr;
+// always @(posedge adc_clk_i) begin
+//     mux_addr_o <= mux_addr;
+// end
+
+red_pitaya_mux i_mux(
+  .adc_clk_i            ( adc_clk_i        ),
+  .adc_rstn_i           ( adc_rstn_i       ),
+  .active_channels_i    ( enabled_channels  ),
+  .mux_addr_o           ( mux_addr_o       )
+  );
 
 // System bus
 // setting up necessary wires
