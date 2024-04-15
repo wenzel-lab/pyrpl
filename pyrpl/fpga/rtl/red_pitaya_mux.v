@@ -22,7 +22,7 @@ reg next_address_found;
 integer i;
 
 always @(posedge adc_clk_i) begin
-    if (adc_rstn_i) begin
+    if (!adc_rstn_i) begin
         mux_clock_counter <= 16'd0;
         mux_addr_o <= 3'd0;
         next_address <= 3'd0;

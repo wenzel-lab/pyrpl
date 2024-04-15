@@ -48,8 +48,8 @@ wire [CHNL-1:0] enabled_channels;
 wire [CHNL-1:0] droplet_sensing_channel;
 // reg  [CHNL-1:0] muxing_channels;
 
-assign enabled_channels        = 6'b111111;
-assign droplet_sensing_channel = 6'b111111;
+assign enabled_channels        = 6'b101001;
+assign droplet_sensing_channel = 6'b101001;
 
 // Registers for thresholds
 // need to be signed for proper comparison with negative voltages
@@ -190,9 +190,10 @@ always @(posedge adc_clk_i) begin
 
     // Base state | 0
     if (state == 4'h0) begin
-        if (fads_reset) begin
+        if (fads_reset || !adc_rstn_i) begin
             state <= 4'h0;
             muxing_channels_o <= 3'b0;
+            sort_trig <= 1'b0;
 
             negative_droplets       <= 32'd0;
             positive_droplets       <= 32'd0;
@@ -206,6 +207,8 @@ always @(posedge adc_clk_i) begin
             droplet_id              <= 32'd0;
             cur_droplet_intensity   <= 32'd0;
             cur_droplet_width       <= 32'd0;
+            droplet_width_counter   <= 32'd0;
+            droplet_classification  <=  8'd0;
 
         end else begin
 //            for (i=0; i<BUFL; i=i+1) begin
