@@ -43,14 +43,6 @@ module red_pitaya_fads #(
     output reg            sys_ack          // bus acknowledge signal
 );
 
-// Registers that need to be added to system bus
-wire [CHNL-1:0] enabled_channels;
-wire [CHNL-1:0] droplet_sensing_channel;
-// reg  [CHNL-1:0] muxing_channels;
-
-assign enabled_channels        = 6'b101001;
-assign droplet_sensing_channel = 6'b101001;
-
 // Registers for thresholds
 // need to be signed for proper comparison with negative voltages
 reg signed [DWT -1:0]   min_intensity_threshold;
@@ -87,10 +79,10 @@ reg [MEM -1:0] cur_time_us = 32'd0;
 
 // State machine
 // Intensity
-wire      min_intensity;
-wire      low_intensity;
-wire positive_intensity;
-wire     high_intensity;
+wire      min_intensity [CHNL-1:0];
+wire      low_intensity [CHNL-1:0];
+wire positive_intensity [CHNL-1:0];
+wire     high_intensity [CHNL-1:0];
 
 //reg      min_intensity_reg =  1'b0;
 //reg positive_intensity_reg =  1'b0;
@@ -99,10 +91,10 @@ wire     high_intensity;
 reg signed [DWT -1:0] droplet_intensity_max = {1'b1, {DWT-2{1'b0}}};
 
 // Width
-wire      min_width;
-wire      low_width;
-wire positive_width;
-wire     high_width;
+wire      min_width[CHNL-1:0];
+wire      low_width[CHNL-1:0];
+wire positive_width[CHNL-1:0];
+wire     high_width[CHNL-1:0];
 
 //reg      min_width_reg = 1'b0;
 //reg      low_width_reg = 1'b0;
@@ -139,18 +131,44 @@ reg [4-1:0] state = 4'h0;
 //reg [MEM-1:0] logger_data;
 //reg [BUFL-1:0] logger_raddr;
 
+// Multi Channel registers and wires
+// Registers that need to be added to system bus
+wire [CHNL-1:0] enabled_channels;
+wire [CHNL-1:0] droplet_sensing_channel;
+wire [3-1   :0] droplet_sensing_address;    
+// reg  [CHNL-1:0] muxing_channels;
+
+assign enabled_channels        = 6'b101001;
+assign droplet_sensing_channel = 6'b000001 << droplet_sensing_address;
+
+assign droplet_sensing_address = 3'h1;
+
+reg signed  [DWT-1:0] min_intensity_threshold   [CHNL-1:0];
+reg signed  [DWT-1:0] low_intensity_threshold   [CHNL-1:0];
+reg signed  [DWT-1:0] high_intensity_threshold  [CHNL-1:0];
+
+reg         [MEM-1:0] signal_width              [CHNL-1:0];
+reg         [MEM-1:0] signal_integral           [CHNL-1:0];
+reg signed  [MEM-1:0] signal_max                [CHNL-1:0];
+
 
 // Assigning
-assign      min_intensity = adc_a_i >= min_intensity_threshold;
+genvar i;
+generate
+    for (i = 0; i < CHNL; i = i + 1) begin
+        assign      min_intensity[i] = adc_a_i >= min_intensity_threshold[i];
 
-assign      low_intensity = (droplet_intensity_max >=   min_intensity_threshold) && (droplet_intensity_max < low_intensity_threshold);
-assign positive_intensity = (droplet_intensity_max >=   low_intensity_threshold) && (droplet_intensity_max < high_intensity_threshold);
-assign     high_intensity =  droplet_intensity_max >=  high_intensity_threshold;
+        assign      low_intensity[i] = (droplet_intensity_max[i] >=   min_intensity_threshold[i]) && (droplet_intensity_max[i] < low_intensity_threshold[i]);
+        assign positive_intensity[i] = (droplet_intensity_max[i] >=   low_intensity_threshold[i]) && (droplet_intensity_max[i] < high_intensity_threshold[i]);
+        assign     high_intensity[i] =  droplet_intensity_max[i] >=  high_intensity_threshold[i];
 
-assign      min_width =  droplet_width_counter >=  min_width_threshold;
-assign      low_width = (droplet_width_counter >=  min_width_threshold) && (droplet_width_counter <  low_width_threshold);
-assign positive_width = (droplet_width_counter >=  low_width_threshold) && (droplet_width_counter < high_width_threshold) && min_width;
-assign     high_width = (droplet_width_counter >= high_width_threshold) && min_width;
+        assign      min_width =  droplet_width_counter >=  min_width_threshold;
+        assign      low_width = (droplet_width_counter >=  min_width_threshold) && (droplet_width_counter <  low_width_threshold);
+        assign positive_width = (droplet_width_counter >=  low_width_threshold) && (droplet_width_counter < high_width_threshold) && min_width;
+        assign     high_width = (droplet_width_counter >= high_width_threshold) && min_width;
+    end
+endgenerate
+
 
 assign droplet_positive = positive_intensity && positive_width;
 //assign droplet_negative = (low_intensity || high_intensity || low_width || high_width) && ((droplet_intensity_max >=  min_intensity_threshold) && min_width);
@@ -228,8 +246,9 @@ always @(posedge adc_clk_i) begin
         if (fads_reset)
                 state <= 4'h0;
         else begin
+            // TODO Add if signal stable (from mux)
             muxing_channels_o <= droplet_sensing_channel;
-            if (min_intensity) begin
+            if (min_intensity[droplet_sensing_channel]) begin
                 droplet_width_counter <= 32'd1;
                 droplet_intensity_max <= adc_a_i;
 
@@ -240,6 +259,7 @@ always @(posedge adc_clk_i) begin
 
     // Acquiring Droplet | 2
     if (state == 4'h2) begin
+        // TODO Add if signal stable (from mux)
         muxing_channels_o <= enabled_channels;
         // Intensity
         if (adc_a_i > droplet_intensity_max) begin
