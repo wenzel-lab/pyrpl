@@ -100,7 +100,7 @@ read_verilog                      $path_rtl/red_pitaya_iq_fgen_block.v
 read_verilog                      $path_rtl/red_pitaya_iq_block.v
 read_verilog                      $path_rtl/red_pitaya_trigger_block.v
 read_verilog                      $path_rtl/red_pitaya_prng.v
-read_verilog                      $path_rtl/red_pitaya_fads.v
+read_verilog                      $path_rtl/red_pitaya_fads.sv
 read_verilog                      $path_rtl/red_pitaya_mux.v
 read_verilog                      $path_rtl/red_pitaya_clock_helpers.v
 

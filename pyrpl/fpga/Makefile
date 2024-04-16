@@ -33,12 +33,16 @@ $(FPGA_BIN):
 	$(VIVADO) -source red_pitaya_vivado.tcl $(LOG)
 
 postclean:
-	mv *.xml out/
+	# mv *.xml out/
+	mv *.jou out/
 	mv *.prm out/
 	mv *.html out/
 	mv *.log out/
+	mv clockinfo.txt out/
 
 postclean_keeplog:
-	mv *.xml out/
+	# mv *.xml out/
+	mv *.jou out/
 	mv *.prm out/
 	mv *.html out/
+	mv clockinfo.txt out/
