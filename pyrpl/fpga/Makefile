@@ -36,13 +36,15 @@ postclean:
 	# mv *.xml out/
 	mv *.jou out/
 	mv *.prm out/
-	mv *.html out/
+	# mv *.html out/
 	mv *.log out/
 	mv clockinfo.txt out/
+	mv tight_setup_hold_pins.txt out/
 
 postclean_keeplog:
 	# mv *.xml out/
 	mv *.jou out/
 	mv *.prm out/
-	mv *.html out/
-	mv clockinfo.txt out/
+	# mv *.html out/
+	mv clockInfo.txt out/
+	mv tight_setup_hold_pins.txt out/

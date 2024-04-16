@@ -124,15 +124,12 @@ reg [4-1:0] state = 4'h0;
 
 // Multi Channel registers and wires
 // Registers that need to be added to system bus
-wire [CHNL-1:0] enabled_channels;
 wire [CHNL-1:0] droplet_sensing_channel;
-wire [3-1   :0] droplet_sensing_address;    
-// reg  [CHNL-1:0] muxing_channels;
 
-assign enabled_channels        = 6'b101001;
+reg [CHNL-1:0] enabled_channels;
 assign droplet_sensing_channel = 6'b000001 << droplet_sensing_address;
 
-assign droplet_sensing_address = 3'h1;
+reg [3-1:0] droplet_sensing_address;
 
 // Intensity
 wire [CHNL-1:0]      min_intensity;
@@ -203,15 +200,23 @@ always @(posedge adc_clk_i) begin
 end
 
 
+
+wire droplet_min;
+assign droplet_min = adc_a_i >= min_intensity_threshold[0];
+
 always @(posedge adc_clk_i) begin
+    debug[6] <= min_intensity[0];
+    debug[7] <= min_intensity[1];
+    debug[8] <= droplet_min;
+    
     // Debug
     case (state)
-        4'h0 : debug <= 8'b00000001;
-        4'h1 : debug <= 8'b00000010;
-        4'h2 : debug <= 8'b00000100;
-        4'h3 : debug <= 8'b00001000;
-        4'h4 : debug <= 8'b00010000;
-        4'h5 : debug <= 8'b00100000;
+        4'h0 : debug <= 6'b000001;
+        4'h1 : debug <= 6'b000010;
+        4'h2 : debug <= 6'b000100;
+        4'h3 : debug <= 6'b001000;
+        4'h4 : debug <= 6'b010000;
+        4'h5 : debug <= 6'b100000;
         default: debug <= 8'b11111111;
     endcase
 
@@ -219,7 +224,7 @@ always @(posedge adc_clk_i) begin
     if (state == 4'h0) begin
         if (fads_reset || !adc_rstn_i) begin
             state <= 4'h0;
-            muxing_channels_o <= 3'b0;
+            muxing_channels_o <= droplet_sensing_channel;
             sort_trig <= 1'b0;
 
             negative_droplets       <= 32'd0;
@@ -276,7 +281,7 @@ always @(posedge adc_clk_i) begin
     // Acquiring Droplet | 2
     if (state == 4'h2) begin
         // TODO Add if signal stable (from mux)
-        muxing_channels_o <= enabled_channels;
+        muxing_channels_o <= enabled_channels || droplet_sensing_channel;
         // Intensity
         if (adc_a_i > signal_max[mux_addr_i]) begin
             signal_max[mux_addr_i] <= adc_a_i;
@@ -296,6 +301,7 @@ always @(posedge adc_clk_i) begin
         else begin
             // Simple state transition if signal is below min intensity
             // in the droplet sensing channel - for now.
+            // TODO there should be a register for the last adc values of each channel
             if (!min_intensity[droplet_sensing_channel]) begin
                 state <= 4'h3;
                 droplet_classification <= 8'd0;
@@ -447,13 +453,16 @@ always @(posedge adc_clk_i)
         //  low_intensity_threshold[k]  <= 14'b11111111111110;
         // high_intensity_threshold[k]  <= 14'b10000011111111;
 
-            min_intensity_threshold  <= '{CHNL{-14'd8191}};
-            low_intensity_threshold  <= '{CHNL{-14'd8190}};
-           high_intensity_threshold  <= '{CHNL{ 14'd8190}};
+            min_intensity_threshold  <= '{CHNL{-14'd250}}; // should roughly correspond to -0.5V
+            low_intensity_threshold  <= '{CHNL{-14'd240}}; // on the specific redpitaya I'm testing on
+           high_intensity_threshold  <= '{CHNL{ 14'd500}};
 
                 min_width_threshold  <= '{CHNL{32'h00000001}};
                 low_width_threshold  <= '{CHNL{32'haabbccdd}};
                high_width_threshold  <= '{CHNL{32'hccddeeff}};
+               
+               enabled_channels <= 6'b101011;
+               droplet_sensing_address <= 3'h1;
 
     end else if (sys_wen) begin
         if (sys_addr[19:0]==20'h00000)    min_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
@@ -468,6 +477,9 @@ always @(posedge adc_clk_i)
 
         if (sys_addr[19:0]==20'h00024)                 sort_delay    <= sys_wdata[MEM-1:0];
         if (sys_addr[19:0]==20'h00028)              sort_duration    <= sys_wdata[MEM-1:0];
+
+        if (sys_addr[19:0]==20'h00300)              enabled_channels <= sys_wdata[CHNL-1:0];
+        if (sys_addr[19:0]==20'h00304)       droplet_sensing_address <= sys_wdata[   3-1:0];
 
     end
 
@@ -508,6 +520,10 @@ always @(posedge adc_clk_i)
             20'h00208: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width}     ; end
             20'h0020c: begin sys_ack <= sys_en;  sys_rdata <= {{32-   8{1'b0}},   droplet_classification}     ; end
             20'h00210: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              cur_time_us}     ; end
+
+            20'h00300: begin sys_ack <= sys_en;  sys_rdata <= {{32-CHNL{1'b0}},         enabled_channels}     ; end
+            20'h00304: begin sys_ack <= sys_en;  sys_rdata <= {{32-   3{1'b0}},  droplet_sensing_address}     ; end
+            20'h00308: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},                  adc_a_i}     ; end
 
 //            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},            logger_wp_cur}     ; end
 
