@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2023.2.2 (lin64) Build 4126759 Thu Feb  8 23:52:05 MST 2024
-| Date             : Tue Apr 16 18:09:43 2024
+| Date             : Wed Apr 17 10:08:39 2024
 | Host             : np-laptop-fw running 64-bit unknown
 | Command          : report_power -file out/post_synth_power.rpt
 | Design           : red_pitaya_top
@@ -53,15 +53,15 @@ Table of Contents
 | On-Chip                 | Power (W) | Used     | Available | Utilization (%) |
 +-------------------------+-----------+----------+-----------+-----------------+
 | Clocks                  |     0.071 |       15 |       --- |             --- |
-| Slice Logic             |     0.126 |    35702 |       --- |             --- |
-|   LUT as Logic          |     0.105 |    16525 |     17600 |           93.89 |
+| Slice Logic             |     0.126 |    35701 |       --- |             --- |
+|   LUT as Logic          |     0.105 |    16524 |     17600 |           93.89 |
 |   CARRY4                |     0.015 |     1571 |      4400 |           35.70 |
 |   Register              |     0.005 |    14058 |     35200 |           39.94 |
 |   F7/F8 Muxes           |    <0.001 |      631 |     17600 |            3.59 |
 |   LUT as Shift Register |    <0.001 |       52 |      6000 |            0.87 |
 |   Others                |     0.000 |      426 |       --- |             --- |
 |   BUFG                  |     0.000 |        1 |        32 |            3.13 |
-| Signals                 |     0.125 |    30245 |       --- |             --- |
+| Signals                 |     0.125 |    30244 |       --- |             --- |
 | Block RAM               |     0.103 |       34 |        60 |           56.67 |
 | PLL                     |     0.097 |        1 |         2 |           50.00 |
 | DSPs                    |     0.041 |       46 |        80 |           57.50 |

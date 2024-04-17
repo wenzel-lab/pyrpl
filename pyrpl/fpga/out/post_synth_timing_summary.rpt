@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2023.2.2 (lin64) Build 4126759 Thu Feb  8 23:52:05 MST 2024
-| Date         : Tue Apr 16 18:09:40 2024
+| Date         : Wed Apr 17 10:08:36 2024
 | Host         : np-laptop-fw running 64-bit unknown
 | Command      : report_timing_summary -file out/post_synth_timing_summary.rpt
 | Design       : red_pitaya_top
@@ -138,7 +138,7 @@ Table of Contents
 
     WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
     -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
-     -5.546    -1588.077                    826                35179       -0.089       -7.139                    107                35179        1.000        0.000                       0                 14266  
+     -5.546    -1588.077                    826                35174       -0.089       -7.139                    107                35174        1.000        0.000                       0                 14266  
 
 
 Timing constraints are not met.
@@ -175,7 +175,7 @@ Clock                 WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total End
 -----                 -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
 adc_clk                                                                                                                                                             2.000        0.000                       0                     1  
   clk_fb                                                                                                                                                            6.751        0.000                       0                     2  
-  pll_adc_clk          -5.546    -1585.308                    814                33089        0.071        0.000                      0                33089        3.020        0.000                       0                 13233  
+  pll_adc_clk          -5.546    -1585.308                    814                33084        0.071        0.000                      0                33084        3.020        0.000                       0                 13233  
   pll_dac_clk_1x        1.626        0.000                      0                   45       -0.089       -1.334                     15                   45        3.500        0.000                       0                    47  
   pll_dac_clk_2p                                                                                                                                                    1.845        0.000                       0                     3  
   pll_dac_clk_2x                                                                                                                                                    1.845        0.000                       0                     3  

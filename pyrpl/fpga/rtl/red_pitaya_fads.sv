@@ -206,8 +206,8 @@ assign droplet_min = adc_a_i >= min_intensity_threshold[0];
 
 always @(posedge adc_clk_i) begin
     debug[6] <= min_intensity[0];
-    debug[7] <= min_intensity[1];
-    debug[8] <= droplet_min;
+    // debug[6] <= min_intensity[1];
+    debug[7] <= droplet_min;
     
     // Debug
     case (state)
@@ -281,7 +281,7 @@ always @(posedge adc_clk_i) begin
     // Acquiring Droplet | 2
     if (state == 4'h2) begin
         // TODO Add if signal stable (from mux)
-        muxing_channels_o <= enabled_channels || droplet_sensing_channel;
+        muxing_channels_o <= enabled_channels | droplet_sensing_channel;
         // Intensity
         if (adc_a_i > signal_max[mux_addr_i]) begin
             signal_max[mux_addr_i] <= adc_a_i;
