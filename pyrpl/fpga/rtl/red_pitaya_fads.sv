@@ -27,6 +27,7 @@ module red_pitaya_fads #(
     input signed [14-1: 0]  adc_a_i             ,   // ADC data CHA
 //    input       [ 14-1: 0]  adc_b_i         ,   // ADC data CHB
     input        [ 3-1: 0]  mux_addr_i          ,   // Current multiplexer address
+    input                   signal_stable_i       ,   // Active high when multiplexer is settled and provides a stable signal
 
     output reg              sort_trig           ,   // Sorting trigger
     output reg  [CHNL-1:0]  muxing_channels_o   ,   // Output of the currently active channels for the multiplexer
@@ -269,11 +270,13 @@ always @(posedge adc_clk_i) begin
         else begin
             // TODO Add if signal stable (from mux)
             muxing_channels_o <= droplet_sensing_channel;
-            if (min_intensity[droplet_sensing_channel]) begin
-                signal_width[droplet_sensing_channel] <= 32'd1;
-                signal_max[droplet_sensing_channel] <= adc_a_i;
+            if (signal_stable_i) begin
+                if (min_intensity[droplet_sensing_channel]) begin
+                    signal_width[droplet_sensing_channel] <= 32'd1;
+                    signal_max[droplet_sensing_channel] <= adc_a_i;
 
-                state <= 4'h2;
+                    state <= 4'h2;
+                end
             end
         end
     end
@@ -282,29 +285,31 @@ always @(posedge adc_clk_i) begin
     if (state == 4'h2) begin
         // TODO Add if signal stable (from mux)
         muxing_channels_o <= enabled_channels | droplet_sensing_channel;
-        // Intensity
-        if (adc_a_i > signal_max[mux_addr_i]) begin
-            signal_max[mux_addr_i] <= adc_a_i;
-        end
+        if (signal_stable_i) begin
+            // Intensity
+            if (adc_a_i > signal_max[mux_addr_i]) begin
+                signal_max[mux_addr_i] <= adc_a_i;
+            end
 
-        // Width
-        if (min_intensity[mux_addr_i]) begin
-            // TODO handle interpolation
-            signal_width[mux_addr_i] <= signal_width[mux_addr_i] + 32'd1;
-        end
+            // Width
+            if (min_intensity[mux_addr_i]) begin
+                // TODO handle interpolation
+                signal_width[mux_addr_i] <= signal_width[mux_addr_i] + 32'd1;
+            end
 
-        // TODO Area
+            // TODO Area
 
-        // State transition
-        if (fads_reset)
-                state <= 4'h0;
-        else begin
-            // Simple state transition if signal is below min intensity
-            // in the droplet sensing channel - for now.
-            // TODO there should be a register for the last adc values of each channel
-            if (!min_intensity[droplet_sensing_channel]) begin
-                state <= 4'h3;
-                droplet_classification <= 8'd0;
+            // State transition
+            if (fads_reset)
+                    state <= 4'h0;
+            else begin
+                // Simple state transition if signal is below min intensity
+                // in the droplet sensing channel - for now.
+                // TODO there should be a register for the last adc values of each channel
+                if (!min_intensity[droplet_sensing_channel]) begin
+                    state <= 4'h3;
+                    droplet_classification <= 8'd0;
+                end
             end
         end
     end

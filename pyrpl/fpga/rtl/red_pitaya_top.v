@@ -490,6 +490,7 @@ assign DIO3_P = mux_addr[1];
 assign DIO4_P = mux_addr[2];
 
 wire [6-1: 0] muxing_channels;
+wire          signal_stable;
 
 // wire [6-1:0] active_channels;
 // assign active_channels = 6'b101001;
@@ -498,7 +499,8 @@ red_pitaya_mux i_mux(
   .adc_clk_i            ( adc_clk         ),
   .adc_rstn_i           ( adc_rstn        ),
   .active_channels_i    ( muxing_channels ),
-  .mux_addr_o           ( mux_addr        )
+  .mux_addr_o           ( mux_addr        ),
+  .signal_stable_o      ( signal_stable   )
   );
 
 red_pitaya_fads i_fads(
@@ -506,6 +508,7 @@ red_pitaya_fads i_fads(
   .adc_rstn_i         ( adc_rstn          ),
   .adc_a_i            ( to_scope_a        ),
   .mux_addr_i         ( mux_addr          ),
+  .signal_stable_i    ( signal_stable     ),
   .muxing_channels_o  ( muxing_channels   ),
   .sort_trig          ( sort_trig         ),
   .debug              ( led_o             ),
