@@ -203,23 +203,35 @@ end
 
 
 wire droplet_min;
-assign droplet_min = adc_a_i >= min_intensity_threshold[0];
+assign droplet_min = adc_a_i >= -14'd250;
 
 always @(posedge adc_clk_i) begin
-    debug[6] <= min_intensity[0];
-    // debug[6] <= min_intensity[1];
-    debug[7] <= droplet_min;
+    debug[0] <= droplet_min;
+    debug[1] <= min_intensity[0];
+    debug[2] <= min_intensity[1];
+    debug[3] <= min_width[0];
+    debug[4] <= min_width[1];
+    debug[5] <= droplet_positive;
+    debug[6] <= droplet_negative;
+    debug[7] <= 1;
+end
+
+
+always @(posedge adc_clk_i) begin
+    // debug[6] <= min_intensity[0];
+    // // debug[6] <= min_intensity[1];
+    // debug[7] <= droplet_min;
     
-    // Debug
-    case (state)
-        4'h0 : debug <= 6'b000001;
-        4'h1 : debug <= 6'b000010;
-        4'h2 : debug <= 6'b000100;
-        4'h3 : debug <= 6'b001000;
-        4'h4 : debug <= 6'b010000;
-        4'h5 : debug <= 6'b100000;
-        default: debug <= 8'b11111111;
-    endcase
+    // // Debug
+    // case (state)
+    //     4'h0 : debug <= 6'b000001;
+    //     4'h1 : debug <= 6'b000010;
+    //     4'h2 : debug <= 6'b000100;
+    //     4'h3 : debug <= 6'b001000;
+    //     4'h4 : debug <= 6'b010000;
+    //     4'h5 : debug <= 6'b100000;
+    //     default: debug <= 8'b11111111;
+    // endcase
 
     // Base state | 0
     if (state == 4'h0) begin
@@ -271,12 +283,12 @@ always @(posedge adc_clk_i) begin
             // TODO Add if signal stable (from mux)
             muxing_channels_o <= droplet_sensing_channel;
             if (signal_stable_i) begin
-                if (min_intensity[droplet_sensing_channel]) begin
+                if (min_intensity[droplet_sensing_address]) begin
                     signal_width <= '{CHNL{0}};
                     signal_max   <= '{CHNL{-14'd8192}};
                     
-                    signal_width[droplet_sensing_channel] <= 32'd1;
-                    signal_max[droplet_sensing_channel] <= adc_a_i;
+                    signal_width[droplet_sensing_address] <= 32'd1;
+                    signal_max[droplet_sensing_address] <= adc_a_i;
 
 
 
@@ -311,7 +323,7 @@ always @(posedge adc_clk_i) begin
                 // Simple state transition if signal is below min intensity
                 // in the droplet sensing channel - for now.
                 // TODO there should be a register for the last adc values of each channel
-                if (!min_intensity[droplet_sensing_channel]) begin
+                if (!min_intensity[droplet_sensing_address]) begin
                     state <= 4'h3;
                     droplet_classification <= 8'd0;
                 end
