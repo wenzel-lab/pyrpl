@@ -272,8 +272,13 @@ always @(posedge adc_clk_i) begin
             muxing_channels_o <= droplet_sensing_channel;
             if (signal_stable_i) begin
                 if (min_intensity[droplet_sensing_channel]) begin
+                    signal_width <= '{CHNL{0}};
+                    signal_max   <= '{CHNL{-14'd8192}};
+                    
                     signal_width[droplet_sensing_channel] <= 32'd1;
                     signal_max[droplet_sensing_channel] <= adc_a_i;
+
+
 
                     state <= 4'h2;
                 end

@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2023.2.2 (lin64) Build 4126759 Thu Feb  8 23:52:05 MST 2024
-| Date             : Wed Apr 17 11:22:39 2024
+| Date             : Wed Apr 17 11:48:46 2024
 | Host             : np-laptop-fw running 64-bit unknown
 | Command          : report_power -file out/post_synth_power.rpt
 | Design           : red_pitaya_top
@@ -53,15 +53,15 @@ Table of Contents
 | On-Chip                 | Power (W) | Used     | Available | Utilization (%) |
 +-------------------------+-----------+----------+-----------+-----------------+
 | Clocks                  |     0.071 |       15 |       --- |             --- |
-| Slice Logic             |     0.125 |    35292 |       --- |             --- |
-|   LUT as Logic          |     0.104 |    16237 |     17600 |           92.26 |
+| Slice Logic             |     0.125 |    35311 |       --- |             --- |
+|   LUT as Logic          |     0.104 |    16225 |     17600 |           92.19 |
 |   CARRY4                |     0.015 |     1571 |      4400 |           35.70 |
 |   Register              |     0.005 |    14064 |     35200 |           39.95 |
 |   F7/F8 Muxes           |    <0.001 |      610 |     17600 |            3.47 |
 |   LUT as Shift Register |    <0.001 |       52 |      6000 |            0.87 |
 |   Others                |     0.000 |      426 |       --- |             --- |
 |   BUFG                  |     0.000 |        1 |        32 |            3.13 |
-| Signals                 |     0.125 |    29688 |       --- |             --- |
+| Signals                 |     0.125 |    29707 |       --- |             --- |
 | Block RAM               |     0.103 |       34 |        60 |           56.67 |
 | PLL                     |     0.097 |        1 |         2 |           50.00 |
 | DSPs                    |     0.041 |       46 |        80 |           57.50 |
@@ -69,7 +69,7 @@ Table of Contents
 | XADC                    |     0.004 |        1 |       --- |             --- |
 | PS7                     |     1.292 |        1 |       --- |             --- |
 | Static Power            |     0.141 |          |           |                 |
-| Total                   |     2.233 |          |           |                 |
+| Total                   |     2.234 |          |           |                 |
 +-------------------------+-----------+----------+-----------+-----------------+
 
 
@@ -79,7 +79,7 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
-| Vccint    |       1.000 |     0.475 |       0.465 |      0.010 |       NA    | Unspecified | NA         |
+| Vccint    |       1.000 |     0.476 |       0.465 |      0.010 |       NA    | Unspecified | NA         |
 | Vccaux    |       1.800 |     0.065 |       0.056 |      0.009 |       NA    | Unspecified | NA         |
 | Vcco33    |       3.300 |     0.068 |       0.067 |      0.001 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
