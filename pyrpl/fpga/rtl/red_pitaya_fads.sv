@@ -1,3 +1,4 @@
+`timescale 10ns / 1ns
 /*
 
 General Description:
@@ -163,7 +164,7 @@ genvar i;
 generate
     for (i = 0; i < CHNL; i = i + 1) begin
         
-        assign      min_intensity[i] = adc_a_i >= min_intensity_threshold[i];
+        assign      min_intensity[i] = (adc_a_i >= min_intensity_threshold[i]) && signal_stable_i && (mux_addr_i == i);
 
         assign      low_intensity[i] = (droplet_intensity_max[i] >=   min_intensity_threshold[i]) && (droplet_intensity_max[i] < low_intensity_threshold[i]);
         assign positive_intensity[i] = (droplet_intensity_max[i] >=   low_intensity_threshold[i]) && (droplet_intensity_max[i] < high_intensity_threshold[i]);
@@ -300,9 +301,11 @@ always @(posedge adc_clk_i) begin
 
     // Acquiring Droplet | 2
     if (state == 4'h2) begin
-        // TODO Add if signal stable (from mux)
-        muxing_channels_o <= enabled_channels | droplet_sensing_channel;
-        if (signal_stable_i) begin
+        if (fads_reset)
+            state <= 4'h0;
+        else if (muxing_channels_o != (enabled_channels | droplet_sensing_channel)) begin
+            muxing_channels_o = enabled_channels | droplet_sensing_channel;
+        end else if (signal_stable_i) begin
             // Intensity
             if (adc_a_i > signal_max[mux_addr_i]) begin
                 signal_max[mux_addr_i] <= adc_a_i;
@@ -317,16 +320,12 @@ always @(posedge adc_clk_i) begin
             // TODO Area
 
             // State transition
-            if (fads_reset)
-                    state <= 4'h0;
-            else begin
-                // Simple state transition if signal is below min intensity
-                // in the droplet sensing channel - for now.
-                // TODO there should be a register for the last adc values of each channel
-                if (!min_intensity[droplet_sensing_address]) begin
-                    state <= 4'h3;
-                    droplet_classification <= 8'd0;
-                end
+            // Simple state transition if signal is below min intensity
+            // in the droplet sensing channel - for now.
+            // TODO there should be a register for the last adc values of each channel
+            if (!min_intensity[droplet_sensing_address] && (mux_addr_i == droplet_sensing_address)) begin
+                state <= 4'h3;
+                droplet_classification <= 8'd0;
             end
         end
     end
@@ -394,7 +393,7 @@ always @(posedge adc_clk_i) begin
                 sort_delay_counter <= 32'd0;
                 state <= 4'h4;
             end else begin
-                state <= 4'h0;
+                state <= 4'h1;
             end
         end
 
@@ -424,7 +423,7 @@ always @(posedge adc_clk_i) begin
                 state <= 4'h0;
         end else begin
             sort_trig <= 1'b0;
-            state <= 4'h0;
+            state <= 4'h1;
         end
 
     end
@@ -483,8 +482,8 @@ always @(posedge adc_clk_i)
                 low_width_threshold  <= '{CHNL{32'haabbccdd}};
                high_width_threshold  <= '{CHNL{32'hccddeeff}};
                
-               enabled_channels <= 6'b101011;
-               droplet_sensing_address <= 3'h1;
+               enabled_channels <= 6'b001111;
+               droplet_sensing_address <= 3'h0;
 
     end else if (sys_wen) begin
         if (sys_addr[19:0]==20'h00000)    min_intensity_threshold[0]    <= sys_wdata[DWT-1:0];

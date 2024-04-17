@@ -1,3 +1,4 @@
+`timescale 10ns / 1ns
 /*
 
 General Description:
@@ -74,6 +75,8 @@ always @(posedge adc_clk_i) begin
                 stable_counter <= stable_counter + 1;
                 signal_stable_o <= 0;
             end
+        end else begin
+            signal_stable_o <= 1;
         end
     end    
 end
