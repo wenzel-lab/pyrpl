@@ -164,11 +164,12 @@ genvar i;
 generate
     for (i = 0; i < CHNL; i = i + 1) begin
         
+        // since min_intensity uses the current adc value, it is not something to be used in droplet evaluation (state >= 3)
         assign      min_intensity[i] = (adc_a_i >= min_intensity_threshold[i]) && signal_stable_i && (mux_addr_i == i);
 
-        assign      low_intensity[i] = (droplet_intensity_max[i] >=   min_intensity_threshold[i]) && (droplet_intensity_max[i] < low_intensity_threshold[i]);
-        assign positive_intensity[i] = (droplet_intensity_max[i] >=   low_intensity_threshold[i]) && (droplet_intensity_max[i] < high_intensity_threshold[i]);
-        assign     high_intensity[i] =  droplet_intensity_max[i] >=  high_intensity_threshold[i];
+        assign      low_intensity[i] = (signal_max[i] >=   min_intensity_threshold[i]) && (signal_max[i] < low_intensity_threshold[i]);
+        assign positive_intensity[i] = (signal_max[i] >=   low_intensity_threshold[i]) && (signal_max[i] < high_intensity_threshold[i]);
+        assign     high_intensity[i] =  signal_max[i] >=  high_intensity_threshold[i];
 
         assign      min_width[i] =  signal_width[i] >=  min_width_threshold[i];
         assign      low_width[i] = (signal_width[i] >=  min_width_threshold[i]) && (signal_width[i] <  low_width_threshold[i]);
@@ -261,7 +262,7 @@ always @(posedge adc_clk_i) begin
             // initialize with the most negative number possible in 14 bit
             // ADC input is signed, that is why 2-complement must be used
             // signal_max <= '{CHNL{1'b1, {DWT-2{1'b0}}}};
-            signal_max <= '{CHNL{0}};
+            signal_max <= '{CHNL{-14'sd8192}};
 
         end else begin
 //            for (i=0; i<BUFL; i=i+1) begin
@@ -286,7 +287,7 @@ always @(posedge adc_clk_i) begin
             if (signal_stable_i) begin
                 if (min_intensity[droplet_sensing_address]) begin
                     signal_width <= '{CHNL{0}};
-                    signal_max   <= '{CHNL{-14'd8192}};
+                    signal_max   <= '{CHNL{-14'sd8192}};
                     
                     signal_width[droplet_sensing_address] <= 32'd1;
                     signal_max[droplet_sensing_address] <= adc_a_i;
@@ -474,9 +475,9 @@ always @(posedge adc_clk_i)
         //  low_intensity_threshold[k]  <= 14'b11111111111110;
         // high_intensity_threshold[k]  <= 14'b10000011111111;
 
-            min_intensity_threshold  <= '{CHNL{-14'd250}}; // should roughly correspond to -0.5V
-            low_intensity_threshold  <= '{CHNL{-14'd240}}; // on the specific redpitaya I'm testing on
-           high_intensity_threshold  <= '{CHNL{ 14'd500}};
+            min_intensity_threshold  <= '{CHNL{-14'sd250}}; // should roughly correspond to -0.5V
+            low_intensity_threshold  <= '{CHNL{-14'sd240}}; // on the specific redpitaya I'm testing on
+           high_intensity_threshold  <= '{CHNL{ 14'sd500}};
 
                 min_width_threshold  <= '{CHNL{32'h00000001}};
                 low_width_threshold  <= '{CHNL{32'haabbccdd}};
@@ -486,6 +487,14 @@ always @(posedge adc_clk_i)
                droplet_sensing_address <= 3'h0;
 
     end else if (sys_wen) begin
+        if (sys_addr[19:0]==20'h00020)                 fads_reset    <= sys_wdata[MEM-1:0];
+
+        if (sys_addr[19:0]==20'h00024)                 sort_delay    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00028)              sort_duration    <= sys_wdata[MEM-1:0];
+
+        if (sys_addr[19:0]==20'h00300)              enabled_channels <= sys_wdata[CHNL-1:0];
+        if (sys_addr[19:0]==20'h00304)       droplet_sensing_address <= sys_wdata[   3-1:0];
+
         if (sys_addr[19:0]==20'h00000)    min_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
         if (sys_addr[19:0]==20'h00004)    low_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
         if (sys_addr[19:0]==20'h00008)   high_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
@@ -494,13 +503,6 @@ always @(posedge adc_clk_i)
         if (sys_addr[19:0]==20'h00014)        low_width_threshold[0]    <= sys_wdata[MEM-1:0];
         if (sys_addr[19:0]==20'h00018)       high_width_threshold[0]    <= sys_wdata[MEM-1:0];
 
-        if (sys_addr[19:0]==20'h00020)                 fads_reset    <= sys_wdata[MEM-1:0];
-
-        if (sys_addr[19:0]==20'h00024)                 sort_delay    <= sys_wdata[MEM-1:0];
-        if (sys_addr[19:0]==20'h00028)              sort_duration    <= sys_wdata[MEM-1:0];
-
-        if (sys_addr[19:0]==20'h00300)              enabled_channels <= sys_wdata[CHNL-1:0];
-        if (sys_addr[19:0]==20'h00304)       droplet_sensing_address <= sys_wdata[   3-1:0];
 
     end
 
