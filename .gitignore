@@ -129,3 +129,5 @@ scripts/pyrpl.spec
 pyrpl/fpga/clockInfo.txt
 pyrpl/fpga/ip/
 pyrpl/fpga/out
+
+vivado*
