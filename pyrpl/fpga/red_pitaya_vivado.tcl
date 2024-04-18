@@ -128,6 +128,7 @@ report_power             -file    $path_out/post_synth_power.rpt
 
 opt_design
 power_opt_design
+report_utilization       -file    $path_out/pre_place_util.rpt
 place_design
 phys_opt_design
 write_checkpoint         -force   $path_out/post_place
