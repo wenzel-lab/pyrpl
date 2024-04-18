@@ -333,43 +333,55 @@ always @(posedge adc_clk_i) begin
                 // cur_droplet_width <= droplet_width_counter;
                 // cur_droplet_intensity <= droplet_intensity_max;
                 cur_time_us <= general_timer_us;
+
+                droplet_classification[0] <= low_intensity;
+                droplet_classification[1] <= positive_intensity;
+                droplet_classification[2] <= high_intensity;
+                droplet_classification[3] <= low_width;
+                droplet_classification[4] <= positive_width;
+                droplet_classification[5] <= high_width;
+                droplet_classification[6] <= sort_trig;
+                droplet_classification[7] <= droplet_positive;
             end
 
-            // TODO evaluate droplet counter necessity
-            // Update droplet counters
-            if (droplet_positive) begin
-//                positive_droplets <= positive_droplets + 32'd1;
-                droplet_classification[7] <= 1;
-//            end else begin
-//                if (droplet_negative)
-////                    negative_droplets <= negative_droplets + 32'd1;
-            end
 
-            if (low_intensity) begin
-//                low_intensity_droplets <= low_intensity_droplets + 32'd1;
-                droplet_classification[0] <= 1;
-            end
 
-            if (positive_intensity)
-                droplet_classification[1] <= 1;
 
-            if (high_intensity) begin
-//                high_intensity_droplets <= high_intensity_droplets + 32'd1;
-                droplet_classification[2] <= 1;
-            end
+//             // TODO evaluate droplet counter necessity
+//             // Update droplet counters
+//             if (droplet_positive) begin
+// //                positive_droplets <= positive_droplets + 32'd1;
+//                 droplet_classification[7] <= 1;
+// //            end else begin
+// //                if (droplet_negative)
+// ////                    negative_droplets <= negative_droplets + 32'd1;
+//             end
 
-            if (low_width) begin
-//                short_droplets <= short_droplets + 32'd1;
-                droplet_classification[3] <= 1;
-            end
+//             if (low_intensity) begin
+// //                low_intensity_droplets <= low_intensity_droplets + 32'd1;
+//                 droplet_classification[0] <= 1;
+//             end
 
-            if (positive_width)
-                droplet_classification[4] <= 1;
+//             if (positive_intensity)
+//                 droplet_classification[1] <= 1;
 
-            if (high_width) begin
-//                long_droplets <= long_droplets + 32'd1;
-                droplet_classification[5] <= 1;
-            end
+//             if (high_intensity) begin
+// //                high_intensity_droplets <= high_intensity_droplets + 32'd1;
+//                 droplet_classification[2] <= 1;
+//             end
+
+//             if (low_width) begin
+// //                short_droplets <= short_droplets + 32'd1;
+//                 droplet_classification[3] <= 1;
+//             end
+
+//             if (positive_width)
+//                 droplet_classification[4] <= 1;
+
+//             if (high_width) begin
+// //                long_droplets <= long_droplets + 32'd1;
+//                 droplet_classification[5] <= 1;
+//             end
 
             // Logging
             // getting log data
