@@ -20,7 +20,11 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module tb_red_pitaya_mux #( parameter DWT = 14 );
+module tb_red_pitaya_mux #( 
+        parameter DWT = 14,
+        parameter MEM = 32,
+        parameter CHNL = 6 
+    );
     reg adc_clk, adc_rstn;
 //    reg [6-1:0] active_channels;
     
@@ -73,11 +77,11 @@ module tb_red_pitaya_mux #( parameter DWT = 14 );
     wire [32-1:0] sys_wdata;
     wire [ 4-1:0] sys_sel;
     
-    assign sys_wen = 0;
-    assign sys_ren = 0;
-    assign sys_addr = 0;
-    assign sys_wdata = 0;
-    assign sys_sel = 0;
+    assign sys_wen = 32'b0;
+    assign sys_ren = 32'b0;
+    assign sys_addr = 32'b0;
+    assign sys_wdata = 32'b0;
+    assign sys_sel = 32'b0;
     
     reg [DWT-1:0] to_scope_a;
     reg droplet_sim_enable;

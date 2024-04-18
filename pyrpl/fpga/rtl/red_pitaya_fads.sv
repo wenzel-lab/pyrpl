@@ -56,7 +56,7 @@ module red_pitaya_fads #(
 // reg [MEM -1:0] high_width_threshold;
 
 // Registers for timers
-reg [MEM -1:0] droplet_width_counter = 32'd0;
+// reg [MEM -1:0] droplet_width_counter = 32'd0;
 reg [MEM -1:0] general_timer_us = 32'd0;
 reg [8   -1:0] general_timer_counter = 8'd0;
 
@@ -86,7 +86,7 @@ reg [MEM -1:0] cur_time_us = 32'd0;
 //reg positive_intensity_reg =  1'b0;
 //reg     high_intensity_reg =  1'b0;
 
-reg signed [DWT -1:0] droplet_intensity_max = {1'b1, {DWT-2{1'b0}}};
+// reg signed [DWT -1:0] droplet_intensity_max = {1'b1, {DWT-2{1'b0}}};
 
 
 //reg      min_width_reg = 1'b0;
@@ -127,11 +127,11 @@ reg [4-1:0] state = 4'h0;
 // Multi Channel registers and wires
 // Registers that need to be added to system bus
 wire [CHNL-1:0] droplet_sensing_channel;
+reg     [3-1:0] droplet_sensing_address;
 
 reg [CHNL-1:0] enabled_channels;
 assign droplet_sensing_channel = 6'b000001 << droplet_sensing_address;
 
-reg [3-1:0] droplet_sensing_address;
 
 // Intensity
 wire [CHNL-1:0]      min_intensity;
@@ -254,7 +254,7 @@ always @(posedge adc_clk_i) begin
             droplet_id              <= 32'd0;
             cur_droplet_intensity   <= 32'd0;
             cur_droplet_width       <= 32'd0;
-            droplet_width_counter   <= 32'd0;
+            // droplet_width_counter   <= 32'd0;
 
             droplet_classification  <=  8'd0;
 
@@ -336,8 +336,10 @@ always @(posedge adc_clk_i) begin
         // Update output
         if (droplet_positive || droplet_negative) begin
             droplet_id <= droplet_id + 32'd1;
-            cur_droplet_width <= droplet_width_counter;
-            cur_droplet_intensity <= droplet_intensity_max;
+            cur_droplet_width[0] <= signal_width[0];
+            cur_droplet_intensity[0] <= signal_max[0];
+            // cur_droplet_width <= droplet_width_counter;
+            // cur_droplet_intensity <= droplet_intensity_max;
             cur_time_us <= general_timer_us;
         end
 

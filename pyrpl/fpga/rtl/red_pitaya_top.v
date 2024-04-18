@@ -121,7 +121,7 @@ module red_pitaya_top (
    output           dac_clk_o          ,  // DAC clock
    output           dac_rst_o          ,  // DAC reset
    // PWM DAC
-   output [ 4-1: 0] dac_pwm_o          ,  // serial PWM DAC
+  //  output [ 4-1: 0] dac_pwm_o          ,  // serial PWM DAC
    // XADC
    input  [ 5-1: 0] vinp_i             ,  // voltages p
    input  [ 5-1: 0] vinn_i             ,  // voltages n
@@ -628,17 +628,17 @@ red_pitaya_ams i_ams (
 
 wire  [ 14-1: 0] pwm_signals[4-1:0];
 
-red_pitaya_pwm pwm [4-1:0] (
-  // system signals
-  .clk   (pwm_clk ),
-  .rstn  (pwm_rstn),
-  // configuration
-  .cfg   ({pwm_cfg_d, pwm_cfg_c, pwm_cfg_b, pwm_cfg_a}),
-  //.signal_i ({pwm_signals[3],pwm_signals[2],pwm_signals[1],pwm_signals[0]}),
-  // PWM outputs
-  .pwm_o (dac_pwm_o),
-  .pwm_s ()
-);
+// red_pitaya_pwm pwm [4-1:0] (
+//   // system signals
+//   .clk   (pwm_clk ),
+//   .rstn  (pwm_rstn),
+//   // configuration
+//   .cfg   ({pwm_cfg_d, pwm_cfg_c, pwm_cfg_b, pwm_cfg_a}),
+//   //.signal_i ({pwm_signals[3],pwm_signals[2],pwm_signals[1],pwm_signals[0]}),
+//   // PWM outputs
+//   .pwm_o (dac_pwm_o),
+//   .pwm_s ()
+// );
 
 //---------------------------------------------------------------------------------
 //  Daisy chain
