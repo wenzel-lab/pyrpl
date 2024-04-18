@@ -61,15 +61,15 @@ reg [MEM -1:0] general_timer_us = 32'd0;
 reg [8   -1:0] general_timer_counter = 8'd0;
 
 
-// Registers for droplet counters;
-reg [MEM -1:0]  low_intensity_droplets = 32'd0;
-reg [MEM -1:0] high_intensity_droplets = 32'd0;
+//// Registers for droplet counters;
+//reg [MEM -1:0]  low_intensity_droplets = 32'd0;
+//reg [MEM -1:0] high_intensity_droplets = 32'd0;
 
-reg [MEM -1:0] short_droplets = 32'd0;
-reg [MEM -1:0]  long_droplets = 32'd0;
+//reg [MEM -1:0] short_droplets = 32'd0;
+//reg [MEM -1:0]  long_droplets = 32'd0;
 
-reg [MEM -1:0] positive_droplets = 32'd0;
-reg [MEM -1:0] negative_droplets = 32'd0;
+//reg [MEM -1:0] positive_droplets = 32'd0;
+//reg [MEM -1:0] negative_droplets = 32'd0;
 
 // Output registers
 reg [MEM -1:0] droplet_id = 32'd0;
@@ -233,14 +233,14 @@ always @(posedge adc_clk_i) begin
                 muxing_channels_o <= droplet_sensing_channel;
                 sort_trig <= 1'b0;
 
-                negative_droplets       <= 32'd0;
-                positive_droplets       <= 32'd0;
+//                negative_droplets       <= 32'd0;
+//                positive_droplets       <= 32'd0;
 
-                low_intensity_droplets  <= 32'd0;
-                high_intensity_droplets <= 32'd0;
+//                low_intensity_droplets  <= 32'd0;
+//                high_intensity_droplets <= 32'd0;
 
-                short_droplets          <= 32'd0;
-                long_droplets           <= 32'd0;
+//                short_droplets          <= 32'd0;
+//                long_droplets           <= 32'd0;
 
                 droplet_id              <= 32'd0;
                 cur_droplet_intensity   <= 32'd0;
@@ -338,15 +338,15 @@ always @(posedge adc_clk_i) begin
             // TODO evaluate droplet counter necessity
             // Update droplet counters
             if (droplet_positive) begin
-                positive_droplets <= positive_droplets + 32'd1;
+//                positive_droplets <= positive_droplets + 32'd1;
                 droplet_classification[7] <= 1;
-            end else begin
-                if (droplet_negative)
-                    negative_droplets <= negative_droplets + 32'd1;
+//            end else begin
+//                if (droplet_negative)
+////                    negative_droplets <= negative_droplets + 32'd1;
             end
 
             if (low_intensity) begin
-                low_intensity_droplets <= low_intensity_droplets + 32'd1;
+//                low_intensity_droplets <= low_intensity_droplets + 32'd1;
                 droplet_classification[0] <= 1;
             end
 
@@ -354,12 +354,12 @@ always @(posedge adc_clk_i) begin
                 droplet_classification[1] <= 1;
 
             if (high_intensity) begin
-                high_intensity_droplets <= high_intensity_droplets + 32'd1;
+//                high_intensity_droplets <= high_intensity_droplets + 32'd1;
                 droplet_classification[2] <= 1;
             end
 
             if (low_width) begin
-                short_droplets <= short_droplets + 32'd1;
+//                short_droplets <= short_droplets + 32'd1;
                 droplet_classification[3] <= 1;
             end
 
@@ -367,7 +367,7 @@ always @(posedge adc_clk_i) begin
                 droplet_classification[4] <= 1;
 
             if (high_width) begin
-                long_droplets <= long_droplets + 32'd1;
+//                long_droplets <= long_droplets + 32'd1;
                 droplet_classification[5] <= 1;
             end
 
@@ -525,13 +525,13 @@ always @(posedge adc_clk_i)
             20'h00028: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},            sort_duration}     ; end
 
 
-            20'h00100: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},   low_intensity_droplets}     ; end
-            20'h00104: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},  high_intensity_droplets}     ; end
+//            20'h00100: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},   low_intensity_droplets}     ; end
+//            20'h00104: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},  high_intensity_droplets}     ; end
 
-            20'h00108: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},           short_droplets}     ; end
-            20'h0010c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},            long_droplets}     ; end
+//            20'h00108: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},           short_droplets}     ; end
+//            20'h0010c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},            long_droplets}     ; end
 
-            20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
+//            20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
 
             20'h00200: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},               droplet_id}     ; end
             20'h00204: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity}     ; end
