@@ -97,7 +97,7 @@ reg [MEM -1:0] cur_time_us = 32'd0;
 // Eval
 wire droplet_positive;
 wire droplet_negative;
-reg [8 -1:0] droplet_classification;
+reg [16 -1:0] droplet_classification;
 
 // Maintenance
 reg droplet_acquisition_enable = 1'b1;
@@ -145,6 +145,11 @@ wire [CHNL-1:0]      low_width;
 wire [CHNL-1:0] positive_width;
 wire [CHNL-1:0]     high_width;
 
+// Area
+wire [CHNL-1:0]      min_area;
+wire [CHNL-1:0]      low_area;
+wire [CHNL-1:0] positive_area;
+wire [CHNL-1:0]     high_area;
 
 reg signed  [DWT-1:0]   min_intensity_threshold [CHNL-1:0];
 reg signed  [DWT-1:0]   low_intensity_threshold [CHNL-1:0];
@@ -154,8 +159,12 @@ reg         [MEM-1:0]       min_width_threshold [CHNL-1:0];
 reg         [MEM-1:0]       low_width_threshold [CHNL-1:0];
 reg         [MEM-1:0]      high_width_threshold [CHNL-1:0];
 
+reg         [MEM-1:0]        min_area_threshold [CHNL-1:0];
+reg         [MEM-1:0]        low_area_threshold [CHNL-1:0];
+reg         [MEM-1:0]       high_area_threshold [CHNL-1:0];
+
 reg         [MEM-1:0] signal_width              [CHNL-1:0];
-reg         [MEM-1:0] signal_integral           [CHNL-1:0];
+reg signed  [MEM-1:0] signal_area               [CHNL-1:0];
 reg signed  [DWT-1:0] signal_max                [CHNL-1:0];
 
 
@@ -170,6 +179,11 @@ generate
         assign      low_intensity[i] = (signal_max[i] >=   min_intensity_threshold[i]) && (signal_max[i] < low_intensity_threshold[i]);
         assign positive_intensity[i] = (signal_max[i] >=   low_intensity_threshold[i]) && (signal_max[i] < high_intensity_threshold[i]);
         assign     high_intensity[i] =  signal_max[i] >=  high_intensity_threshold[i];
+
+        assign      min_area[i] =  signal_area[i] >=  min_area_threshold[i];
+        assign      low_area[i] = (signal_area[i] >=  min_area_threshold[i]) && (signal_area[i] <  low_area_threshold[i]);
+        assign positive_area[i] = (signal_area[i] >=  low_area_threshold[i]) && (signal_area[i] < high_area_threshold[i]) && min_area[i];
+        assign     high_area[i] = (signal_area[i] >= high_area_threshold[i]) && min_area[i];
 
         assign      min_width[i] =  signal_width[i] >=  min_width_threshold[i];
         assign      low_width[i] = (signal_width[i] >=  min_width_threshold[i]) && (signal_width[i] <  low_width_threshold[i]);
@@ -278,9 +292,12 @@ always @(posedge adc_clk_i) begin
                 if (signal_stable_i) begin
                     if (min_intensity[droplet_sensing_address]) begin
                         signal_width <= '{CHNL{0}};
+                        signal_area  <= '{CHNL{0}};
                         signal_max   <= '{CHNL{-14'sd8192}};
                         
+                        
                         signal_width[droplet_sensing_address] <= 32'd1;
+                        signal_area[droplet_sensing_address] <= signal_area[droplet_sensing_address] + adc_a_i;
                         signal_max[droplet_sensing_address] <= adc_a_i;
 
                         state <= 4'h2;
@@ -334,14 +351,22 @@ always @(posedge adc_clk_i) begin
                 // cur_droplet_intensity <= droplet_intensity_max;
                 cur_time_us <= general_timer_us;
 
-                droplet_classification[0] <= low_intensity;
-                droplet_classification[1] <= positive_intensity;
-                droplet_classification[2] <= high_intensity;
-                droplet_classification[3] <= low_width;
-                droplet_classification[4] <= positive_width;
-                droplet_classification[5] <= high_width;
-                droplet_classification[6] <= sort_trig;
-                droplet_classification[7] <= droplet_positive;
+                droplet_classification[ 0] <= | low_intensity;
+                droplet_classification[ 1] <= & positive_intensity;
+                droplet_classification[ 2] <= | high_intensity;
+                droplet_classification[ 3] <= | low_width;
+                droplet_classification[ 4] <= & positive_width;
+                droplet_classification[ 5] <= | high_width;
+                droplet_classification[ 6] <= | low_area;
+                droplet_classification[ 7] <= & positive_area;
+                droplet_classification[ 8] <= | high_area;
+                droplet_classification[ 9] <= 1'b0;
+                droplet_classification[10] <= 1'b0;
+                droplet_classification[11] <= 1'b0;
+                droplet_classification[12] <= 1'b0;
+                droplet_classification[13] <= 1'b0;
+                droplet_classification[14] <= sort_trig;
+                droplet_classification[15] <= droplet_positive;
             end
 
 
@@ -546,6 +571,27 @@ always @(posedge adc_clk_i)
         if (sys_addr[19:0]==20'h010b4)       high_width_threshold[5]    <= sys_wdata[MEM-1:0];
 
 
+        if (sys_addr[19:0]==20'h010c0)         min_area_threshold[0]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010c4)         min_area_threshold[1]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010c8)         min_area_threshold[2]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010cc)         min_area_threshold[3]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010d0)         min_area_threshold[4]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010d4)         min_area_threshold[5]    <= sys_wdata[MEM-1:0];
+
+        if (sys_addr[19:0]==20'h010e0)         low_area_threshold[0]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010e4)         low_area_threshold[1]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010e8)         low_area_threshold[2]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010ec)         low_area_threshold[3]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010f0)         low_area_threshold[4]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010f4)         low_area_threshold[5]    <= sys_wdata[MEM-1:0];
+
+        if (sys_addr[19:0]==20'h01100)        high_area_threshold[0]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01104)        high_area_threshold[1]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01108)        high_area_threshold[2]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h0110c)        high_area_threshold[3]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01110)        high_area_threshold[4]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01114)        high_area_threshold[5]    <= sys_wdata[MEM-1:0];
+
     end
 
 // Writing to system bus
@@ -579,6 +625,7 @@ always @(posedge adc_clk_i)
             20'h01050: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[4]}  ; end
             20'h01054: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[5]}  ; end
 
+            
             20'h01060: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[0]}  ; end
             20'h01064: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[1]}  ; end
             20'h01068: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[2]}  ; end
@@ -601,6 +648,28 @@ always @(posedge adc_clk_i)
             20'h010b4: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold[5]}  ; end
 
 
+            20'h010c0: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       min_area_threshold[0]}  ; end
+            20'h010c4: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       min_area_threshold[1]}  ; end
+            20'h010c8: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       min_area_threshold[2]}  ; end
+            20'h010cc: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       min_area_threshold[3]}  ; end
+            20'h010d0: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       min_area_threshold[4]}  ; end
+            20'h010d4: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       min_area_threshold[5]}  ; end
+
+            20'h010e0: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       low_area_threshold[0]}  ; end
+            20'h010e4: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       low_area_threshold[1]}  ; end
+            20'h010e8: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       low_area_threshold[2]}  ; end
+            20'h010ec: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       low_area_threshold[3]}  ; end
+            20'h010f0: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       low_area_threshold[4]}  ; end
+            20'h010f4: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},       low_area_threshold[5]}  ; end
+
+            20'h01100: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      high_area_threshold[0]}  ; end
+            20'h01104: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      high_area_threshold[1]}  ; end
+            20'h01108: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      high_area_threshold[2]}  ; end
+            20'h0110c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      high_area_threshold[3]}  ; end
+            20'h01110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      high_area_threshold[4]}  ; end
+            20'h01114: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      high_area_threshold[5]}  ; end
+
+
             20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               fads_reset}     ; end
 
             20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               sort_delay}     ; end
@@ -618,7 +687,7 @@ always @(posedge adc_clk_i)
             20'h00200: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},               droplet_id}     ; end
             20'h00204: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity}     ; end
             20'h00208: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width}     ; end
-            20'h0020c: begin sys_ack <= sys_en;  sys_rdata <= {{32-   8{1'b0}},   droplet_classification}     ; end
+            20'h0020c: begin sys_ack <= sys_en;  sys_rdata <= {{32-  16{1'b0}},   droplet_classification}     ; end
             20'h00210: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              cur_time_us}     ; end
 
             20'h00300: begin sys_ack <= sys_en;  sys_rdata <= {{32-CHNL{1'b0}},         enabled_channels}     ; end
