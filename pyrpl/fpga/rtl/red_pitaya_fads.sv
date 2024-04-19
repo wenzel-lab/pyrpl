@@ -102,10 +102,12 @@ reg [16 -1:0] droplet_classification;
 // Maintenance
 reg droplet_acquisition_enable = 1'b1;
 reg sort_enable = 1'b1;
-reg [MEM -1:0] sort_counter = 32'd0;
-reg [MEM -1:0] sort_delay_counter = 32'd0;
-reg [MEM -1:0] sort_duration = 32'd125000;
-reg [MEM -1:0] sort_delay = 32'd31250;
+reg [MEM -1:0] sort_end_us = 32'd0;
+// reg [MEM -1:0] sort_counter = 32'd0;
+reg [MEM -1:0] sort_delay_end_us = 32'd0;
+// reg [MEM -1:0] sort_delay_counter = 32'd0;
+reg [MEM -1:0] sort_duration = 32'd50;
+reg [MEM -1:0] sort_delay = 32'd100;
 reg fads_reset = 1'b0;
 
 reg [4-1:0] state = 4'h0;
@@ -341,6 +343,7 @@ always @(posedge adc_clk_i) begin
         // Evaluating Droplet | 3
         4'h3 : begin
             debug <= 6'b001000;
+            muxing_channels_o <= droplet_sensing_channel;
             
             // Update output
             if (droplet_positive || droplet_negative) begin
@@ -362,6 +365,9 @@ always @(posedge adc_clk_i) begin
                 // droplet_classification[ 6] <= | low_area;
                 // droplet_classification[ 7] <= & positive_area;
                 // droplet_classification[ 8] <= | high_area;
+                droplet_classification[ 6] <= 1'b0;
+                droplet_classification[ 7] <= 1'b0;
+                droplet_classification[ 8] <= 1'b0;
 
                 droplet_classification[ 9] <= 1'b0;
                 droplet_classification[10] <= 1'b0;
@@ -426,8 +432,9 @@ always @(posedge adc_clk_i) begin
                     state <= 4'h0;
             else begin
                 if (sort_enable && positive_intensity && positive_width) begin
-                    sort_counter <= 32'd0;
-                    sort_delay_counter <= 32'd0;
+                    // sort_counter <= 32'd0;
+                    sort_delay_end_us <= general_timer_us + sort_delay;
+                    // sort_delay_counter <= 32'd0;
                     state <= 4'h4;
                 end else begin
                     state <= 4'h1;
@@ -438,13 +445,17 @@ always @(posedge adc_clk_i) begin
         // Sorting Delay | 4
         4'h4 : begin
             debug <= 6'b010000;
+            muxing_channels_o <= droplet_sensing_channel;
             if (fads_reset)
                 state <= 4'h0;
 
-            if (sort_delay_counter < sort_delay) begin
-                sort_delay_counter <= sort_delay_counter + 32'd1;
+            else if (general_timer_us >= sort_delay_end_us) begin
 
-            end else begin
+            // if (sort_delay_counter < sort_delay) begin
+            //     sort_delay_counter <= sort_delay_counter + 32'd1;
+            // end else begin
+
+                sort_end_us <= general_timer_us + sort_duration;
                 state <= 4'h5;
             end
         end
@@ -452,16 +463,27 @@ always @(posedge adc_clk_i) begin
         // Sorting | 5
         4'h5 : begin
             debug <= 6'b100000;
-            if (sort_counter < sort_duration) begin
-                sort_counter <= sort_counter + 32'd1;
-                sort_trig <= 1'b1;
-
+            muxing_channels_o <= droplet_sensing_channel;
             if (fads_reset)
                 state <= 4'h0;
-        end else begin
-            sort_trig <= 1'b0;
-            state <= 4'h1;
-        end
+            else if (general_timer_us < sort_end_us) begin
+                sort_trig <= 1;
+            end else begin
+                sort_trig <= 0;
+                state <= 4'h1;
+            end
+                //     sort_trig <= 1'b0;
+                //     state <= 4'h1;
+            // if (sort_counter < sort_duration) begin
+            //     sort_counter <= sort_counter + 32'd1;
+            //     sort_trig <= 1'b1;
+
+        //     if (fads_reset)
+        //         state <= 4'h0;
+        // end else begin
+        //     sort_trig <= 1'b0;
+        //     state <= 4'h1;
+        // end
         end
         default: debug <= 8'b11111111;
     endcase
@@ -511,15 +533,15 @@ always @(posedge adc_clk_i)
         //  low_intensity_threshold[k]  <= 14'b11111111111110;
         // high_intensity_threshold[k]  <= 14'b10000011111111;
 
-            min_intensity_threshold  <= '{CHNL{-14'sd250}}; // should roughly correspond to -0.5V
-            low_intensity_threshold  <= '{CHNL{-14'sd240}}; // on the specific redpitaya I'm testing on
-           high_intensity_threshold  <= '{CHNL{ 14'sd500}};
+            min_intensity_threshold  <= '{CHNL{-14'sd175}}; // should roughly correspond to -0.5V
+            low_intensity_threshold  <= '{CHNL{-14'sd150}}; // on the specific redpitaya I'm testing on
+           high_intensity_threshold  <= '{CHNL{ 14'sd900}};
 
                 min_width_threshold  <= '{CHNL{32'h00000001}};
-                low_width_threshold  <= '{CHNL{32'haabbccdd}};
+                low_width_threshold  <= '{CHNL{32'h000000ff}};
                high_width_threshold  <= '{CHNL{32'hccddeeff}};
                
-               enabled_channels <= 6'b001111;
+               enabled_channels <= 6'b000011;
                droplet_sensing_address <= 3'h0;
 
     end else if (sys_wen) begin
