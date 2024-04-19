@@ -494,21 +494,56 @@ always @(posedge adc_clk_i)
                droplet_sensing_address <= 3'h0;
 
     end else if (sys_wen) begin
-        if (sys_addr[19:0]==20'h00020)                 fads_reset    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00020)                 fads_reset       <= sys_wdata[MEM-1:0];
 
-        if (sys_addr[19:0]==20'h00024)                 sort_delay    <= sys_wdata[MEM-1:0];
-        if (sys_addr[19:0]==20'h00028)              sort_duration    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00024)                 sort_delay       <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00028)              sort_duration       <= sys_wdata[MEM-1:0];
 
-        if (sys_addr[19:0]==20'h00300)              enabled_channels <= sys_wdata[CHNL-1:0];
-        if (sys_addr[19:0]==20'h00304)       droplet_sensing_address <= sys_wdata[   3-1:0];
+        if (sys_addr[19:0]==20'h00300)              enabled_channels    <= sys_wdata[CHNL-1:0];
+        if (sys_addr[19:0]==20'h00304)       droplet_sensing_address    <= sys_wdata[   3-1:0];
 
-        if (sys_addr[19:0]==20'h00000)    min_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
-        if (sys_addr[19:0]==20'h00004)    low_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
-        if (sys_addr[19:0]==20'h00008)   high_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01000)    min_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01004)    min_intensity_threshold[1]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01008)    min_intensity_threshold[2]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h0100c)    min_intensity_threshold[3]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01010)    min_intensity_threshold[4]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01014)    min_intensity_threshold[5]    <= sys_wdata[DWT-1:0];
 
-        if (sys_addr[19:0]==20'h00010)        min_width_threshold[0]    <= sys_wdata[MEM-1:0];
-        if (sys_addr[19:0]==20'h00014)        low_width_threshold[0]    <= sys_wdata[MEM-1:0];
-        if (sys_addr[19:0]==20'h00018)       high_width_threshold[0]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01020)    low_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01024)    low_intensity_threshold[1]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01028)    low_intensity_threshold[2]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h0102c)    low_intensity_threshold[3]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01030)    low_intensity_threshold[4]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01034)    low_intensity_threshold[5]    <= sys_wdata[DWT-1:0];
+
+        if (sys_addr[19:0]==20'h01040)   high_intensity_threshold[0]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01044)   high_intensity_threshold[1]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01048)   high_intensity_threshold[2]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h0104c)   high_intensity_threshold[3]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01050)   high_intensity_threshold[4]    <= sys_wdata[DWT-1:0];
+        if (sys_addr[19:0]==20'h01054)   high_intensity_threshold[5]    <= sys_wdata[DWT-1:0];
+
+
+        if (sys_addr[19:0]==20'h01060)        min_width_threshold[0]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01064)        min_width_threshold[1]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01068)        min_width_threshold[2]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h0106c)        min_width_threshold[3]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01070)        min_width_threshold[4]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01074)        min_width_threshold[5]    <= sys_wdata[MEM-1:0];
+
+        if (sys_addr[19:0]==20'h01080)        low_width_threshold[0]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01084)        low_width_threshold[1]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01088)        low_width_threshold[2]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h0108c)        low_width_threshold[3]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01090)        low_width_threshold[4]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h01094)        low_width_threshold[5]    <= sys_wdata[MEM-1:0];
+
+        if (sys_addr[19:0]==20'h010a0)       high_width_threshold[0]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010a4)       high_width_threshold[1]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010a8)       high_width_threshold[2]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010ac)       high_width_threshold[3]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010b0)       high_width_threshold[4]    <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h010b4)       high_width_threshold[5]    <= sys_wdata[MEM-1:0];
 
 
     end
@@ -523,13 +558,48 @@ always @(posedge adc_clk_i)
         sys_err <= 1'b0;
         casez (sys_addr[19:0])
         //   Address  |       handling bus signals        | creating 32 bit wide word containing the data
-            20'h00000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[0]}  ; end
-            20'h00004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  low_intensity_threshold[0]}  ; end
-            20'h00008: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[0]}  ; end
+            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[0]}  ; end
+            20'h01004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[1]}  ; end
+            20'h01008: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[2]}  ; end
+            20'h0100c: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[3]}  ; end
+            20'h01010: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[4]}  ; end
+            20'h01014: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[5]}  ; end
 
-            20'h00010: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[0]}  ; end
-            20'h00014: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold[0]}  ; end
-            20'h00018: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold[0]}  ; end
+            20'h01020: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  low_intensity_threshold[0]}  ; end
+            20'h01024: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  low_intensity_threshold[1]}  ; end
+            20'h01028: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  low_intensity_threshold[2]}  ; end
+            20'h0102c: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  low_intensity_threshold[3]}  ; end
+            20'h01030: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  low_intensity_threshold[4]}  ; end
+            20'h01034: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  low_intensity_threshold[5]}  ; end
+
+            20'h01040: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[0]}  ; end
+            20'h01044: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[1]}  ; end
+            20'h01048: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[2]}  ; end
+            20'h0104c: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[3]}  ; end
+            20'h01050: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[4]}  ; end
+            20'h01054: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}}, high_intensity_threshold[5]}  ; end
+
+            20'h01060: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[0]}  ; end
+            20'h01064: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[1]}  ; end
+            20'h01068: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[2]}  ; end
+            20'h0106c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[3]}  ; end
+            20'h01070: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[4]}  ; end
+            20'h01074: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      min_width_threshold[5]}  ; end
+
+            20'h01080: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold[0]}  ; end
+            20'h01084: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold[1]}  ; end
+            20'h01088: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold[2]}  ; end
+            20'h0108c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold[3]}  ; end
+            20'h01090: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold[4]}  ; end
+            20'h01094: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      low_width_threshold[5]}  ; end
+
+            20'h010a0: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold[0]}  ; end
+            20'h010a4: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold[1]}  ; end
+            20'h010a8: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold[2]}  ; end
+            20'h010ac: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold[3]}  ; end
+            20'h010b0: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold[4]}  ; end
+            20'h010b4: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},     high_width_threshold[5]}  ; end
+
 
             20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               fads_reset}     ; end
 

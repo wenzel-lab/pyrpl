@@ -172,8 +172,8 @@ write_cfgmem -force -format BIN -size 2 -interface SMAPx32 -disablebitswap -load
 # generate system definition
 ################################################################################
 
-write_sysdef             -hwdef   $path_sdk/red_pitaya.hwdef \
-                         -bitfile $path_out/red_pitaya.bit \
-                         -file    $path_sdk/red_pitaya.sysdef
+# write_sysdef             -hwdef   $path_sdk/red_pitaya.hwdef \
+#                          -bitfile $path_out/red_pitaya.bit \
+#                          -file    $path_sdk/red_pitaya.sysdef
 
 exit

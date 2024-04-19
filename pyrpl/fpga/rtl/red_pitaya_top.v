@@ -528,31 +528,40 @@ red_pitaya_fads i_fads(
 
 //---------------------------------------------------------------------------------
 //  DAC arbitrary signal generator
-wire    [14-1: 0] asg1phase_o;
+// wire    [14-1: 0] asg1phase_o;
 
-red_pitaya_asg i_asg (
-   // DAC
-  .dac_a_o         (  asg_a                      ),  // CH 1
-  .dac_b_o         (  asg_b                      ),  // CH 2
-  .dac_clk_i       (  adc_clk                    ),  // clock
-  .dac_rstn_i      (  adc_rstn                   ),  // reset - active low
-  .trig_a_i        (  exp_p_in[0]                ),
-  .trig_b_i        (  exp_p_in[0]                ),
-  .trig_fads_i     (  sort_trig                  ),
-  .trig_out_o      (  trig_asg_out               ),
-  .trig_scope_i    (  trig_scope_out             ),
-  .asg1phase_o     (  asg1phase_o                ),
+// red_pitaya_asg i_asg (
+//    // DAC
+//   .dac_a_o         (  asg_a                      ),  // CH 1
+//   .dac_b_o         (  asg_b                      ),  // CH 2
+//   .dac_clk_i       (  adc_clk                    ),  // clock
+//   .dac_rstn_i      (  adc_rstn                   ),  // reset - active low
+//   .trig_a_i        (  exp_p_in[0]                ),
+//   .trig_b_i        (  exp_p_in[0]                ),
+//   .trig_fads_i     (  sort_trig                  ),
+//   .trig_out_o      (  trig_asg_out               ),
+//   .trig_scope_i    (  trig_scope_out             ),
+//   .asg1phase_o     (  asg1phase_o                ),
   
-  // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[2]                 ),  // write enable
-  .sys_ren         (  sys_ren[2]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 2*32+31: 2*32]  ),  // read data
-  .sys_err         (  sys_err[2]                 ),  // error indicator
-  .sys_ack         (  sys_ack[2]                 )   // acknowledge signal
-);
+//   // System bus
+//   .sys_addr        (  sys_addr                   ),  // address
+//   .sys_wdata       (  sys_wdata                  ),  // write data
+//   .sys_sel         (  sys_sel                    ),  // write byte select
+//   .sys_wen         (  sys_wen[2]                 ),  // write enable
+//   .sys_ren         (  sys_ren[2]                 ),  // read enable
+//   .sys_rdata       (  sys_rdata[ 2*32+31: 2*32]  ),  // read data
+//   .sys_err         (  sys_err[2]                 ),  // error indicator
+//   .sys_ack         (  sys_ack[2]                 )   // acknowledge signal
+// );
+
+// Due to asg deactivation
+assign asg_a = 14'sb0;
+assign asg_b = 14'sb0;
+
+assign sys_rdata[2*32+:32] = 32'h0; 
+assign sys_err  [2       ] =  1'b0;
+assign sys_ack  [2       ] =  1'b1;
+
 
 //---------------------------------------------------------------------------------
 //  DSP module
