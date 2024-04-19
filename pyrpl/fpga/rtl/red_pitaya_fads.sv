@@ -287,7 +287,7 @@ always @(posedge adc_clk_i) begin
         // Wait for Droplet | 1
         4'h1 : begin
             debug <= 6'b000010;
-            if (fads_reset)
+            if (fads_reset || !adc_rstn_i)
                 state <= 4'h0;
             else begin
                 muxing_channels_o <= droplet_sensing_channel;
@@ -313,7 +313,7 @@ always @(posedge adc_clk_i) begin
         4'h2 : begin
             debug <= 6'b000100;
             muxing_channels_o = enabled_channels | droplet_sensing_channel;
-            if (fads_reset)
+            if (fads_reset || !adc_rstn_i)
                 state <= 4'h0;
             else if (signal_stable_i) begin
                 // Intensity
@@ -342,46 +342,7 @@ always @(posedge adc_clk_i) begin
 
         // Evaluating Droplet | 3
         4'h3 : begin
-            debug <= 6'b001000;
-            muxing_channels_o <= droplet_sensing_channel;
-            
-            // Update output
-            if (droplet_positive || droplet_negative) begin
-                droplet_id <= droplet_id + 32'd1;
-                cur_droplet_width[0] <= signal_width[0];
-                cur_droplet_intensity[0] <= signal_max[0];
-                // cur_droplet_width <= droplet_width_counter;
-                // cur_droplet_intensity <= droplet_intensity_max;
-                cur_time_us <= general_timer_us;
-
-                droplet_classification[ 0] <= | low_intensity;
-                droplet_classification[ 1] <= & positive_intensity;
-                droplet_classification[ 2] <= | high_intensity;
-
-                droplet_classification[ 3] <= | low_width;
-                droplet_classification[ 4] <= & positive_width;
-                droplet_classification[ 5] <= | high_width;
-
-                // droplet_classification[ 6] <= | low_area;
-                // droplet_classification[ 7] <= & positive_area;
-                // droplet_classification[ 8] <= | high_area;
-                droplet_classification[ 6] <= 1'b0;
-                droplet_classification[ 7] <= 1'b0;
-                droplet_classification[ 8] <= 1'b0;
-
-                droplet_classification[ 9] <= 1'b0;
-                droplet_classification[10] <= 1'b0;
-                droplet_classification[11] <= 1'b0;
-                droplet_classification[12] <= 1'b0;
-                droplet_classification[13] <= 1'b0;
-
-                droplet_classification[14] <= sort_trig;
-                droplet_classification[15] <= droplet_positive;
-            end
-
-
-
-
+/* 
 //             // TODO evaluate droplet counter necessity
 //             // Update droplet counters
 //             if (droplet_positive) begin
@@ -424,14 +385,49 @@ always @(posedge adc_clk_i) begin
             // incrementing write pointer
     //        logger_wp <= (logger_wp + ALIG) % BUFL;
     //        logger_wp <= logger_wp + 4'b0001;
-    //        logger_wp <= logger_wp + 1;
+    //        logger_wp <= logger_wp + 1; 
+*/
 
             
             // State transition
-            if (fads_reset)
-                    state <= 4'h0;
+            if (fads_reset || !adc_rstn_i)
+                state <= 4'h0;
             else begin
-                if (sort_enable && positive_intensity && positive_width) begin
+                debug <= 6'b001000;
+                muxing_channels_o <= droplet_sensing_channel;
+                
+                // Update output
+                if (droplet_positive || droplet_negative) begin
+                    droplet_id <= droplet_id + 32'd1;
+                    cur_droplet_width[0] <= signal_width[0];
+                    cur_droplet_intensity[0] <= signal_max[0];
+                    cur_time_us <= general_timer_us;
+    
+                    droplet_classification[ 0] <= | low_intensity;
+                    droplet_classification[ 1] <= & positive_intensity;
+                    droplet_classification[ 2] <= | high_intensity;
+    
+                    droplet_classification[ 3] <= | low_width;
+                    droplet_classification[ 4] <= & positive_width;
+                    droplet_classification[ 5] <= | high_width;
+    
+                    // droplet_classification[ 6] <= | low_area;
+                    // droplet_classification[ 7] <= & positive_area;
+                    // droplet_classification[ 8] <= | high_area;
+                    droplet_classification[ 6] <= 1'b0;
+                    droplet_classification[ 7] <= 1'b0;
+                    droplet_classification[ 8] <= 1'b0;
+    
+                    droplet_classification[ 9] <= 1'b0;
+                    droplet_classification[10] <= 1'b0;
+                    droplet_classification[11] <= 1'b0;
+                    droplet_classification[12] <= 1'b0;
+                    droplet_classification[13] <= 1'b0;
+    
+                    droplet_classification[14] <= sort_trig;
+                    droplet_classification[15] <= droplet_positive;
+                end
+                if (sort_enable && droplet_positive) begin
                     // sort_counter <= 32'd0;
                     sort_delay_end_us <= general_timer_us + sort_delay;
                     // sort_delay_counter <= 32'd0;
@@ -444,12 +440,12 @@ always @(posedge adc_clk_i) begin
 
         // Sorting Delay | 4
         4'h4 : begin
-            debug <= 6'b010000;
-            muxing_channels_o <= droplet_sensing_channel;
-            if (fads_reset)
+            if (fads_reset || !adc_rstn_i)
                 state <= 4'h0;
 
             else if (general_timer_us >= sort_delay_end_us) begin
+                debug <= 6'b010000;
+                muxing_channels_o <= droplet_sensing_channel;
 
             // if (sort_delay_counter < sort_delay) begin
             //     sort_delay_counter <= sort_delay_counter + 32'd1;
@@ -462,15 +458,17 @@ always @(posedge adc_clk_i) begin
 
         // Sorting | 5
         4'h5 : begin
-            debug <= 6'b100000;
-            muxing_channels_o <= droplet_sensing_channel;
-            if (fads_reset)
+            if (fads_reset || !adc_rstn_i)
                 state <= 4'h0;
-            else if (general_timer_us < sort_end_us) begin
-                sort_trig <= 1;
-            end else begin
-                sort_trig <= 0;
-                state <= 4'h1;
+            else begin 
+                debug <= 6'b100000;
+                muxing_channels_o <= droplet_sensing_channel;
+                if (general_timer_us < sort_end_us) begin
+                    sort_trig <= 1;
+                end else begin
+                    sort_trig <= 0;
+                    state <= 4'h1;
+                end
             end
                 //     sort_trig <= 1'b0;
                 //     state <= 4'h1;
