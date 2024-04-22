@@ -31,7 +31,8 @@ int spi_fd = -1;
 int main(void){
 
     /* Sample data */
-    char *data = "REDPITAYA SPI TEST";
+    // char *data = "0b1001010010001101";
+    char *data = "He";
 
     /* Init the spi resources */
     if(init_spi() < 0){
