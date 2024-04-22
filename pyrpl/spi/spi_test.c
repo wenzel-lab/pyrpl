@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -28,11 +29,65 @@ static int write_spi(char *write_data, int size);
 /* Constants definition */
 int spi_fd = -1;
 
+// typedef adc_value_s adc_value;
+// struct adc_value_s {
+//     int address;
+//     int value;
+// }
+
+// static bool is_adc_value_valid(adc_value adc_val){
+//     if(adc_val.value < 0 || adc_val.value > 1024){
+//         return false;
+//     }
+//     if (adc_val.address < 0 || adc_val.address > 7) {
+//     return true;
+// }
+
+typedef struct spi_packet_s{
+    int address;
+    int value;
+} spi_packet;
+
+static bool is_spi_packet_valid(spi_packet spi_packet){
+    if(spi_packet.address < 1 || spi_packet.address > 6){
+        return true;
+    }
+    if(spi_packet.value < 0 || spi_packet.value > 1023){
+        return false;
+    }
+    return true;
+}
+
+
+static char *spi_packet_to_char(spi_packet spi_packet){
+    char *result = malloc(2*sizeof(char));
+
+    /* Extract the address and value into four and ten bits respectively */
+    int address_4bits = spi_packet.address & 0xF;
+    int value_10bits = spi_packet.value & 0x3FF;
+
+    /* Build the char */
+    result[0] = (address_4bits << 4) | ((value_10bits >> 6) & 0xF);
+    result[1] = ((value_10bits & 0x3F) << 2) | 0b01;
+
+    return result;
+}
+
+
 int main(void){
 
     /* Sample data */
     // char *data = "0b1001010010001101";
-    char *data = "He";
+    // char *data = "He";
+
+    spi_packet packet = {
+        .address = 5,
+        .value = 657
+    };
+    if (!is_spi_packet_valid(packet)) {
+        return -1;
+    }
+    char *data = spi_packet_to_char(packet);
 
     /* Init the spi resources */
     if(init_spi() < 0){
