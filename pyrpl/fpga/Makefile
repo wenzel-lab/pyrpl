@@ -9,6 +9,8 @@
 # build results
 FPGA_BIN=out/red_pitaya.bin
 
+FPGA_BD=ip/system_bd_7020.tcl
+
 #logfile for stdout and stderr
 LOG=2>&1 | tee -a fpga.log
 
@@ -19,7 +21,7 @@ LOG=2>&1 | tee -a fpga.log
 VIVADO = /opt/Xilinx/Vivado/2023.2/bin/vivado -nolog -mode batch
 VIVADO_SETTINGS = /opt/Xilinx/Vivado/2023.2/settings64.sh 
 
-all: clean $(FPGA_BIN) postclean_keeplog
+all: clean $(FPGA_BD) $(FPGA_BIN) postclean_keeplog
 
 debug: clean $(FPGA_BIN)
 
@@ -28,6 +30,9 @@ clean:
 
 settings:
 	$(VIVADO_SETTINGS)
+
+$(FPGA_BD):
+	$(VIVADO) -source update_system_bd.tcl $(LOG)
 
 $(FPGA_BIN):
 	$(VIVADO) -source red_pitaya_vivado.tcl $(LOG)
