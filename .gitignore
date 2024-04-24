@@ -30,6 +30,7 @@ var/
 # vivado windows stuff
 #pyrpl/fpga/.srcs
 pyrpl/fpga/.*
+pyrpl/fpga/NA
 #pyrpl/fpga/.Xil
 #pyrpl/fpga/out
 pyrpl/fpga/out/*.bin

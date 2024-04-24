@@ -29,9 +29,11 @@ file mkdir $path_sdk
 # setup an in memory project
 ################################################################################
 
-set part xc7z010clg400-1
+set old_part xc7z010clg400-1
+set new_part xc7z020clg400-1
+set block_design $path_ip/bd/system.bd
 
-create_project -in_memory -part $part
+create_project -in_memory -part $old_part
 #create_project openfads ./openfads -part $part
 
 # experimental attempts to avoid a warning
@@ -41,11 +43,11 @@ create_project -in_memory -part $part
 #set_property FAMILY 7SERIES [current_project]
 #set_property SIM_DEVICE 7SERIES [current_project]
 
-add_files $path_ip/system.bd
-open_bd_design [get_files $path_ip/system.bd]
+add_files $block_design
+open_bd_design [get_files $block_design]
 
 # Set part to the 7020 after loading the 7010 system.bd
-set_property part xc7z020clg400-1 [current_project]
+set_property part $new_part [current_project]
 # report_ip_status -name ip_status
 
 # Upgrade the ip and exchange it for the parts needed with 7020

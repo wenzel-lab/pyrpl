@@ -21,12 +21,14 @@ LOG=2>&1 | tee -a fpga.log
 VIVADO = /opt/Xilinx/Vivado/2023.2/bin/vivado -nolog -mode batch
 VIVADO_SETTINGS = /opt/Xilinx/Vivado/2023.2/settings64.sh 
 
-all: clean $(FPGA_BD) $(FPGA_BIN) postclean_keeplog
+# all: clean $(FPGA_BD) $(FPGA_BIN) postclean_keeplog
+all: clean $(FPGA_BD) $(FPGA_BIN)
+# all: clean $(FPGA_BD) postclean_keeplog
 
 debug: clean $(FPGA_BIN)
 
 clean:
-	rm -rf out .Xil .srcs sdk
+	rm -rf out .Xil .srcs sdk ip/bd/ip ip/system
 
 settings:
 	$(VIVADO_SETTINGS)

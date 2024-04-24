@@ -29,7 +29,8 @@ file mkdir $path_sdk
 # setup an in memory project
 ################################################################################
 
-set part xc7z010clg400-1
+# set part xc7z010clg400-1
+set part xc7z020clg400-1
 
 create_project -in_memory -part $part
 #create_project openfads ./openfads -part $part
@@ -47,11 +48,14 @@ create_project -in_memory -part $part
 
 # file was created from GUI using "write_bd_tcl -force ip/system_bd.tcl"
 # create PS BD
-source                            $path_ip/system_bd.tcl
+set origin_dir_loc                $path_ip
+# source                            $path_ip/system_bd.tcl
+source                            $path_ip/system_bd_7020.tcl
 
 # generate SDK files
-generate_target all [get_files    system.bd]
+generate_target all [get_files    $path_ip/system/system.bd]
 write_hwdef              -file    $path_sdk/red_pitaya.hwdef
+make_wrapper -files [get_files    $path_ip/system/system.bd] -top
 
 ################################################################################
 # read files:
@@ -63,7 +67,7 @@ write_hwdef              -file    $path_sdk/red_pitaya.hwdef
 # template
 #read_verilog                      $path_rtl/...
 
-read_verilog                      .gen/sources_1/bd/system/hdl/system_wrapper.v
+read_verilog                      $path_ip/system/hdl/system_wrapper.v
 
 #exit
 
@@ -105,7 +109,8 @@ read_verilog                      $path_rtl/red_pitaya_mux.v
 read_verilog                      $path_rtl/red_pitaya_clock_helpers.v
 
 #constraints
-read_xdc                          $path_sdc/red_pitaya.xdc
+# read_xdc                          $path_sdc/red_pitaya.xdc
+read_xdc                          $path_sdc/red_pitaya_7020.xdc
 
 ################################################################################
 # run synthesis
