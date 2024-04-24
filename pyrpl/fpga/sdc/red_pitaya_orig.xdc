@@ -197,9 +197,9 @@ set_property PACKAGE_PIN J14     [get_ports {led_o[7]}]
 #NET "adc_clk" TNM_NET = "adc_clk";
 #TIMESPEC TS_adc_clk = PERIOD "adc_clk" 125 MHz;
 
-create_clock -period 8.138 -name adc_clk [get_ports adc_clk_i[1]]
+create_clock -period 8.000 -name adc_clk [get_ports adc_clk_i[1]]
 
-set_input_delay -clock adc_clk 6.000 [get_ports adc_dat_i[*][*]]
+set_input_delay -clock adc_clk 3.400 [get_ports adc_dat_i[*][*]]
 
 create_clock -period 4.000 -name rx_clk  [get_ports daisy_p_i[1]]
 
@@ -208,7 +208,7 @@ set_false_path -from [get_clocks adc_clk]     -to [get_clocks dac_clk_2x]
 set_false_path -from [get_clocks adc_clk]     -to [get_clocks dac_clk_2p]
 set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks adc_clk]
 set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks pll_adc_clk]
-set_false_path -from [get_clocks par_clk]     -to [get_clocks pll_adc_clk]
+#set_false_path -from [get_clocks par_clk]     -to [get_clocks pll_adc_clk]
 
 set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_clk_1x]
 set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks dac_clk_2x]
@@ -217,4 +217,4 @@ set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks ser_clk]
 set_false_path -from [get_clocks clk_fpga_0]  -to [get_clocks pdm_clk]
 set_false_path -from [get_clocks dac_clk_o] -to [get_clocks dac_clk_2x]
 set_false_path -from [get_clocks dac_clk_o] -to [get_clocks dac_clk_2p]
-set_false_path -from [get_clocks pll_adc_clk] -to [get_clocks par_clk]
+#set_false_path -from [get_clocks pll_adc_clk] -to [get_clocks par_clk]
