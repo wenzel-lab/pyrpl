@@ -80,14 +80,16 @@ int main(void){
     // char *data = "0b1001010010001101";
     // char *data = "He";
 
-    spi_packet packet = {
-        .address = 5,
-        .value = 657
-    };
-    if (!is_spi_packet_valid(packet)) {
-        return -1;
-    }
-    char *data = spi_packet_to_char(packet);
+
+
+    // spi_packet packet = {
+    //     .address = 5,
+    //     .value = 657
+    // };
+    // if (!is_spi_packet_valid(packet)) {
+    //     return -1;
+    // }
+    // char *data = spi_packet_to_char(packet);
 
     /* Init the spi resources */
     if(init_spi() < 0){
@@ -95,17 +97,30 @@ int main(void){
         return -1;
     }
 
-    /* Write some sample data */
-    if(write_spi(data, strlen(data)) < 0){
-        printf("Write to SPI failed. Error: %s\n", strerror(errno));
-        return -1;
+    for(int i=1; i<=6; i++){
+        spi_packet packet = {
+            .address = i,
+            .value = 716
+        };
+        if (!is_spi_packet_valid(packet)) {
+            return -1;
+        }
+        char *data = spi_packet_to_char(packet);
+        
+        /* Write some sample data */
+        if(write_spi(data, strlen(data)) < 0){
+            printf("Write to SPI failed. Error: %s\n", strerror(errno));
+            return -1;
+        }
+
+        /* Read flash ID and some sample loopback data */
+        if(read_flash_id(spi_fd) < 0){
+            printf("Error reading from SPI bus : %s\n", strerror(errno));
+            return -1;
+        }
+        free(data);
     }
 
-    /* Read flash ID and some sample loopback data */
-    if(read_flash_id(spi_fd) < 0){
-        printf("Error reading from SPI bus : %s\n", strerror(errno));
-        return -1;
-    }
 
     /* Release resources */
     if(release_spi() < 0){
