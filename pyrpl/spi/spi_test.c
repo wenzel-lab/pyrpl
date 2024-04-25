@@ -74,6 +74,45 @@ static char *spi_packet_to_char(spi_packet spi_packet){
 }
 
 
+static spi_packet* read_spi_packets_from_file(const char* filename, int *spi_packet_count){
+
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error opening file");
+        exit(1);
+    }
+
+    /* Count number of lines in file to allocate correct amount of memory */
+    int line_count = 0;
+    char line[100];
+    while (fgets(line, sizeof line, file) != NULL) {
+        line_count++;
+    }
+    rewind(file);
+
+    spi_packet* spi_packets = malloc(line_count * sizeof(spi_packet));
+
+    int i = 0;
+    while (fscanf(file, "%d\t%d\n", &spi_packets[i].address, &spi_packets[i].value) == 2) {
+        i++;
+    }
+
+    fclose(file);
+    *spi_packet_count = i;
+
+    for(int i = 0; i < *spi_packet_count; i++){
+        if(!is_spi_packet_valid(spi_packets[i])){
+            fprintf(stderr, "Packet at index %d is not valid!\n", i);
+            free(spi_packets);
+            return NULL;
+        }
+    }
+
+    return spi_packets;
+}
+
+
+
 int main(void){
 
     /* Sample data */
@@ -97,16 +136,17 @@ int main(void){
         return -1;
     }
 
-    for(int i=1; i<=6; i++){
-        spi_packet packet = {
-            .address = i,
-            .value = 716
-        };
-        if (!is_spi_packet_valid(packet)) {
-            return -1;
-        }
-        char *data = spi_packet_to_char(packet);
-        
+    
+    int *spi_packet_count_ptr = &spi_packet_count;
+    spi_packet *spi_packets = read_spi_packets_from_file("bias_values.tsv", spi_packet_count_ptr);
+    if(spi_packets == NULL){
+        printf("Failed to read spi packets from file!\n");
+        return -1;
+    }
+
+    for(int i=0; i<spi_packet_count; i++){
+        char *data = spi_packet_to_char(spi_packets[i]);
+
         /* Write some sample data */
         if(write_spi(data, strlen(data)) < 0){
             printf("Write to SPI failed. Error: %s\n", strerror(errno));
