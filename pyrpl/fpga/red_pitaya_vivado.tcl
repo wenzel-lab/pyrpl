@@ -50,7 +50,8 @@ create_project -in_memory -part $part
 # create PS BD
 set origin_dir_loc                $path_ip
 # source                            $path_ip/system_bd.tcl
-source                            $path_ip/system_bd_7020.tcl
+# source                            $path_ip/system_bd_7020.tcl
+source                            $path_ip/system_bd_Z20_orig.tcl
 
 # generate SDK files
 generate_target all [get_files    $path_ip/system/system.bd]
@@ -67,6 +68,7 @@ make_wrapper -files [get_files    $path_ip/system/system.bd] -top
 # template
 #read_verilog                      $path_rtl/...
 
+# read_verilog                      $path_ip/system/hdl/system_wrapper.v
 read_verilog                      $path_ip/system/hdl/system_wrapper.v
 
 #exit
@@ -169,9 +171,9 @@ write_bitstream -force -bin_file -verbose $path_out/red_pitaya.bit
 # generate the .bin file for flashing via 'cat red_pitaya.bin > /dev/xdevcfg'
 ################################################################################
 
-# set_property BITSTREAM.GENERAL.COMPRESS FALSE [current_design]
-# write_bitstream -force $path_out/red_pitaya_uncompressed.bit
-# write_cfgmem -force -format BIN -size 2 -interface SMAPx32 -disablebitswap -loadbit "up 0x0 $path_out/red_pitaya.bit" red_pitaya.bin
+set_property BITSTREAM.GENERAL.COMPRESS FALSE [current_design]
+write_bitstream -force $path_out/red_pitaya_uncompressed.bit
+write_cfgmem -force -format BIN -size 4 -interface SMAPx32 -disablebitswap -loadbit "up 0x0 $path_out/red_pitaya.bit" red_pitaya.bin
 
 # write_bitstream -force -bin_file -verbose $path_out
 

@@ -9,8 +9,10 @@ source_path="${pyrpl_out_dir}/${bitfile}"
 
 modification_date="$(date --iso-8601="seconds" -r ${source_path})"
 
-host="pyrpl"
-destination_path="/root/${modification_date}_${bitfile}"
+host="xchm"
+destination_path="/root/bitstreams/${modification_date}_${bitfile}"
+
+ssh ${host} "mkdir -p /root/bitstreams"
 
 scp ${source_path} ${host}:${destination_path}
 
