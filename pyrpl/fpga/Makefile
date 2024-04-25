@@ -35,6 +35,9 @@ settings:
 
 $(FPGA_BD):
 	$(VIVADO) -source update_system_bd.tcl $(LOG)
+	mv NA/ps7_summary.html ip/ps7_summary_7020.html
+	rmdir NA
+	git restore ip/bd/system.bd
 
 $(FPGA_BIN):
 	$(VIVADO) -source red_pitaya_vivado.tcl $(LOG)
