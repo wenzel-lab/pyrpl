@@ -136,7 +136,7 @@ int main(void){
         return -1;
     }
 
-    
+    int spi_packet_count = 0;
     int *spi_packet_count_ptr = &spi_packet_count;
     spi_packet *spi_packets = read_spi_packets_from_file("bias_values.tsv", spi_packet_count_ptr);
     if(spi_packets == NULL){
