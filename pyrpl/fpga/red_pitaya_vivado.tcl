@@ -29,8 +29,8 @@ file mkdir $path_sdk
 # setup an in memory project
 ################################################################################
 
-# set part xc7z010clg400-1
-set part xc7z020clg400-1
+set part xc7z010clg400-1
+# set part xc7z020clg400-1
 
 create_project -in_memory -part $part
 #create_project openfads ./openfads -part $part
@@ -49,14 +49,19 @@ create_project -in_memory -part $part
 # file was created from GUI using "write_bd_tcl -force ip/system_bd.tcl"
 # create PS BD
 set origin_dir_loc                $path_ip
-# source                            $path_ip/system_bd.tcl
+source                            $path_ip/system_bd.tcl
 # source                            $path_ip/system_bd_7020.tcl
-source                            $path_ip/system_bd_Z20_orig.tcl
+# source                            $path_ip/system_bd_Z20_orig.tcl
+
 
 # generate SDK files
-generate_target all [get_files    $path_ip/system/system.bd]
-write_hwdef              -file    $path_sdk/red_pitaya.hwdef
-make_wrapper -files [get_files    $path_ip/system/system.bd] -top
+# generate_target all [get_files    $path_ip/system/system.bd]
+# write_hwdef              -file    $path_sdk/red_pitaya.hwdef
+# make_wrapper -files [get_files    $path_ip/system/system.bd] -top
+
+generate_target all [get_files      .srcs/sources_1/bd/system/system.bd]
+write_hwdef              -file      $path_sdk/red_pitaya.hwdef
+make_wrapper -files [get_files      .srcs/sources_1/bd/system/system.bd] -top
 
 ################################################################################
 # read files:
@@ -69,7 +74,8 @@ make_wrapper -files [get_files    $path_ip/system/system.bd] -top
 #read_verilog                      $path_rtl/...
 
 # read_verilog                      $path_ip/system/hdl/system_wrapper.v
-read_verilog                      $path_ip/system/hdl/system_wrapper.v
+# read_verilog                      $path_ip/system/hdl/system_wrapper.v
+read_verilog                      .gen/sources_1/bd/system/hdl/system_wrapper.v
 
 #exit
 
@@ -111,8 +117,8 @@ read_verilog                      $path_rtl/red_pitaya_mux.v
 read_verilog                      $path_rtl/red_pitaya_clock_helpers.v
 
 #constraints
-# read_xdc                          $path_sdc/red_pitaya.xdc
-read_xdc                          $path_sdc/red_pitaya_7020.xdc
+read_xdc                          $path_sdc/red_pitaya.xdc
+# read_xdc                          $path_sdc/red_pitaya_7020.xdc
 
 ################################################################################
 # run synthesis
@@ -173,7 +179,7 @@ write_bitstream -force -bin_file -verbose $path_out/red_pitaya.bit
 
 set_property BITSTREAM.GENERAL.COMPRESS FALSE [current_design]
 write_bitstream -force $path_out/red_pitaya_uncompressed.bit
-write_cfgmem -force -format BIN -size 4 -interface SMAPx32 -disablebitswap -loadbit "up 0x0 $path_out/red_pitaya.bit" red_pitaya.bin
+write_cfgmem -force -format BIN -size 2 -interface SMAPx32 -disablebitswap -loadbit "up 0x0 $path_out/red_pitaya.bit" red_pitaya.bin
 
 # write_bitstream -force -bin_file -verbose $path_out
 

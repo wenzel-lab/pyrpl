@@ -1,11 +1,11 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2023.2.2 (lin64) Build 4126759 Thu Feb  8 23:52:05 MST 2024
-| Date             : Thu Apr 25 07:24:45 2024
+| Date             : Tue Jun  4 00:17:16 2024
 | Host             : np-laptop-fw running 64-bit unknown
 | Command          : report_power -file out/post_synth_power.rpt
 | Design           : red_pitaya_top
-| Device           : xc7z020clg400-1
+| Device           : xc7z010clg400-1
 | Design State     : synthesized
 | Grade            : commercial
 | Process          : typical
@@ -30,14 +30,14 @@ Table of Contents
 ----------
 
 +--------------------------+--------------+
-| Total On-Chip Power (W)  | 2.147        |
+| Total On-Chip Power (W)  | 2.164        |
 | Design Power Budget (W)  | Unspecified* |
 | Power Budget Margin (W)  | NA           |
-| Dynamic (W)              | 1.987        |
-| Device Static (W)        | 0.161        |
+| Dynamic (W)              | 2.027        |
+| Device Static (W)        | 0.136        |
 | Effective TJA (C/W)      | 11.5         |
-| Max Ambient (C)          | 60.2         |
-| Junction Temperature (C) | 49.8         |
+| Max Ambient (C)          | 60.0         |
+| Junction Temperature (C) | 50.0         |
 | Confidence Level         | Low          |
 | Setting File             | ---          |
 | Simulation Activity File | ---          |
@@ -52,24 +52,24 @@ Table of Contents
 +-------------------------+-----------+----------+-----------+-----------------+
 | On-Chip                 | Power (W) | Used     | Available | Utilization (%) |
 +-------------------------+-----------+----------+-----------+-----------------+
-| Clocks                  |     0.080 |       15 |       --- |             --- |
-| Slice Logic             |     0.115 |    32792 |       --- |             --- |
-|   LUT as Logic          |     0.096 |    15446 |     53200 |           29.03 |
-|   CARRY4                |     0.014 |     1439 |     13300 |           10.82 |
-|   Register              |     0.005 |    13090 |    106400 |           12.30 |
-|   F7/F8 Muxes           |    <0.001 |       42 |     53200 |            0.08 |
-|   LUT as Shift Register |    <0.001 |       52 |     17400 |            0.30 |
+| Clocks                  |     0.062 |       15 |       --- |             --- |
+| Slice Logic             |     0.116 |    32792 |       --- |             --- |
+|   LUT as Logic          |     0.098 |    15446 |     17600 |           87.76 |
+|   CARRY4                |     0.014 |     1439 |      4400 |           32.70 |
+|   Register              |     0.005 |    13090 |     35200 |           37.19 |
+|   F7/F8 Muxes           |    <0.001 |       42 |     17600 |            0.24 |
+|   LUT as Shift Register |    <0.001 |       52 |      6000 |            0.87 |
 |   Others                |     0.000 |      416 |       --- |             --- |
 |   BUFG                  |     0.000 |        2 |        32 |            6.25 |
-| Signals                 |     0.113 |    28311 |       --- |             --- |
-| Block RAM               |     0.069 |       20 |       140 |           14.29 |
-| PLL                     |     0.096 |        1 |         4 |           25.00 |
-| DSPs                    |     0.037 |       44 |       220 |           20.00 |
-| I/O                     |     0.228 |       75 |       125 |           60.00 |
+| Signals                 |     0.115 |    28311 |       --- |             --- |
+| Block RAM               |     0.070 |       20 |        60 |           33.33 |
+| PLL                     |     0.097 |        1 |         2 |           50.00 |
+| DSPs                    |     0.038 |       44 |        80 |           55.00 |
+| I/O                     |     0.232 |       75 |       100 |           75.00 |
 | XADC                    |     0.004 |        1 |       --- |             --- |
-| PS7                     |     1.244 |        1 |       --- |             --- |
-| Static Power            |     0.161 |          |           |                 |
-| Total                   |     2.147 |          |           |                 |
+| PS7                     |     1.292 |        1 |       --- |             --- |
+| Static Power            |     0.136 |          |           |                 |
+| Total                   |     2.163 |          |           |                 |
 +-------------------------+-----------+----------+-----------+-----------------+
 
 
@@ -79,22 +79,22 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
-| Vccint    |       1.000 |     0.436 |       0.417 |      0.019 |       NA    | Unspecified | NA         |
-| Vccaux    |       1.800 |     0.072 |       0.055 |      0.017 |       NA    | Unspecified | NA         |
-| Vcco33    |       3.300 |     0.067 |       0.066 |      0.001 |       NA    | Unspecified | NA         |
+| Vccint    |       1.000 |     0.415 |       0.405 |      0.009 |       NA    | Unspecified | NA         |
+| Vccaux    |       1.800 |     0.065 |       0.056 |      0.009 |       NA    | Unspecified | NA         |
+| Vcco33    |       3.300 |     0.068 |       0.067 |      0.001 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco18    |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco15    |       1.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco135   |       1.350 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco12    |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vccaux_io |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
-| Vccbram   |       1.000 |     0.008 |       0.006 |      0.003 |       NA    | Unspecified | NA         |
+| Vccbram   |       1.000 |     0.008 |       0.006 |      0.002 |       NA    | Unspecified | NA         |
 | MGTAVcc   |       1.000 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | MGTAVtt   |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | MGTVccaux |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
-| Vccpint   |       1.000 |     0.668 |       0.632 |      0.036 |       NA    | Unspecified | NA         |
+| Vccpint   |       1.000 |     0.714 |       0.678 |      0.036 |       NA    | Unspecified | NA         |
 | Vccpaux   |       1.800 |     0.038 |       0.027 |      0.010 |       NA    | Unspecified | NA         |
-| Vccpll    |       1.800 |     0.016 |       0.013 |      0.003 |       NA    | Unspecified | NA         |
+| Vccpll    |       1.800 |     0.017 |       0.014 |      0.003 |       NA    | Unspecified | NA         |
 | Vcco_ddr  |       1.500 |     0.356 |       0.354 |      0.002 |       NA    | Unspecified | NA         |
 | Vcco_mio0 |       3.300 |     0.002 |       0.001 |      0.001 |       NA    | Unspecified | NA         |
 | Vcco_mio1 |       2.500 |     0.003 |       0.002 |      0.001 |       NA    | Unspecified | NA         |
@@ -142,18 +142,18 @@ Table of Contents
 +----------------+-----------------------------------------------------------------------+-----------------+
 | Clock          | Domain                                                                | Constraint (ns) |
 +----------------+-----------------------------------------------------------------------+-----------------+
-| adc_clk        | adc_clk_p_i                                                           |             8.1 |
-| clk_fb         | pll/clk_fb                                                            |             8.1 |
+| adc_clk        | adc_clk_p_i                                                           |             8.0 |
+| clk_fb         | pll/clk_fb                                                            |             8.0 |
 | clk_fpga_0     | i_ps/system_i/system_i/processing_system7/inst/FCLK_CLK_unbuffered[0] |             8.0 |
 | clk_fpga_1     | i_ps/system_i/system_i/processing_system7/inst/FCLK_CLK_unbuffered[1] |             4.0 |
 | clk_fpga_2     | i_ps/system_i/system_i/processing_system7/inst/FCLK_CLK_unbuffered[2] |            20.0 |
 | clk_fpga_3     | i_ps/system_i/system_i/processing_system7/inst/FCLK_CLK_unbuffered[3] |             5.0 |
-| pll_adc_clk    | pll/clk_adc                                                           |             8.1 |
-| pll_dac_clk_1x | pll/clk_dac_1x                                                        |             8.1 |
-| pll_dac_clk_2p | pll/clk_dac_2p                                                        |             4.1 |
-| pll_dac_clk_2x | pll/clk_dac_2x                                                        |             4.1 |
-| pll_pwm_clk    | pll/clk_pwm                                                           |             4.1 |
-| pll_ser_clk    | pll/clk_ser                                                           |             4.1 |
+| pll_adc_clk    | pll/clk_adc                                                           |             8.0 |
+| pll_dac_clk_1x | pll/clk_dac_1x                                                        |             8.0 |
+| pll_dac_clk_2p | pll/clk_dac_2p                                                        |             4.0 |
+| pll_dac_clk_2x | pll/clk_dac_2x                                                        |             4.0 |
+| pll_pwm_clk    | pll/clk_pwm                                                           |             4.0 |
+| pll_ser_clk    | pll/clk_ser                                                           |             4.0 |
 +----------------+-----------------------------------------------------------------------+-----------------+
 
 
@@ -166,10 +166,10 @@ Table of Contents
 +-----------------------------+-----------+
 | Name                        | Power (W) |
 +-----------------------------+-----------+
-| red_pitaya_top              |     1.986 |
+| red_pitaya_top              |     2.027 |
 |   i_ams                     |     0.001 |
-|   i_dsp                     |     0.313 |
-|     genblk2[0].i_pid        |     0.022 |
+|   i_dsp                     |     0.305 |
+|     genblk2[0].i_pid        |     0.021 |
 |       pidfilter             |     0.011 |
 |     genblk2[1].i_pid        |     0.021 |
 |       pidfilter             |     0.011 |
@@ -177,7 +177,7 @@ Table of Contents
 |       pidfilter             |     0.011 |
 |     genblk3[3].i_trigger    |     0.007 |
 |       triggerfilter         |     0.003 |
-|     genblk4[4].iir          |     0.031 |
+|     genblk4[4].iir          |     0.027 |
 |       iir_inputfilter       |     0.002 |
 |     genblk5[5].iq           |     0.058 |
 |       demodulator           |     0.004 |
@@ -193,19 +193,19 @@ Table of Contents
 |       iqfilter[0]           |     0.008 |
 |       iqfilter[1]           |     0.008 |
 |       modulator             |     0.010 |
-|     genblk6[7].iq_2_outputs |     0.077 |
+|     genblk6[7].iq_2_outputs |     0.076 |
 |       demodulator           |     0.004 |
 |       inputfilter           |     0.003 |
 |       iq_fgen               |     0.018 |
 |       iqfilter[0]           |     0.016 |
 |       iqfilter[1]           |     0.016 |
 |       modulator             |     0.012 |
-|   i_fads                    |     0.015 |
+|   i_fads                    |     0.013 |
 |   i_hk                      |     0.001 |
-|   i_ps                      |     1.271 |
+|   i_ps                      |     1.318 |
 |     axi_slave_gp0           |     0.002 |
-|     system_i                |     1.267 |
-|       system_i              |     1.267 |
+|     system_i                |     1.314 |
+|       system_i              |     1.314 |
 |   i_scope                   |     0.049 |
 |   pll                       |     0.097 |
 +-----------------------------+-----------+

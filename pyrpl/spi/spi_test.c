@@ -59,6 +59,7 @@ static bool is_spi_packet_valid(spi_packet spi_packet){
 }
 
 
+
 static char *spi_packet_to_char(spi_packet spi_packet){
     char *result = malloc(2*sizeof(char));
 
@@ -148,17 +149,17 @@ int main(void){
         char *data = spi_packet_to_char(spi_packets[i]);
 
         /* Write some sample data */
-        if(write_spi(data, strlen(data)) < 0){
+        if(write_spi(data, 2) < 0){
             printf("Write to SPI failed. Error: %s\n", strerror(errno));
             return -1;
         }
+        free(data);
 
         /* Read flash ID and some sample loopback data */
         if(read_flash_id(spi_fd) < 0){
             printf("Error reading from SPI bus : %s\n", strerror(errno));
             return -1;
         }
-        free(data);
     }
 
 
@@ -285,10 +286,12 @@ static int read_flash_id(int fd){
     return 0;
 }
 
+char *test_string = "Hello World";
+
 /* Write data to the SPI bus */
 static int write_spi(char *write_buffer, int size){
 
-    int write_spi = write(spi_fd, write_buffer, strlen(write_buffer));
+    int write_spi = write(spi_fd, write_buffer, size);
 
     if(write_spi < 0){
         printf("Failed to write to SPI. Error: %s\n", strerror(errno));

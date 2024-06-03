@@ -271,6 +271,7 @@ class RedPitaya(object):
         sleep(self.parameters['delay'])
 
     def update_fpga(self, filename=None):
+        self.logger.info("Updating FPGA")
         if filename is None:
             try:
                 source = self.parameters['filename']
@@ -307,12 +308,14 @@ class RedPitaya(object):
                 break
         # kill all other servers to prevent reading while fpga is flashed
         self.end()
+        self.logger.debug("Killing all servers")
         self.ssh.ask('killall nginx')
         self.ssh.ask('systemctl stop redpitaya_nginx') # for 0.94 and higher
-        self.ssh.ask('cat '
-                 + os.path.join(self.parameters['serverdirname'], self.parameters['serverbinfilename'])
-                 + ' > //dev//xdevcfg')
+        self.logger.debug("Flashing FPGA")
+        self.ssh.ask('/opt/redpitaya/bin/fpgautil -b ' 
+            + os.path.join(self.parameters['serverdirname'], self.parameters['serverbinfilename']))
         sleep(self.parameters['delay'])
+        self.logger.debug("Restarting server")
         self.ssh.ask('rm -f '+ os.path.join(self.parameters['serverdirname'], self.parameters['serverbinfilename']))
         self.ssh.ask("nginx -p //opt//www//")
         self.ssh.ask('systemctl start redpitaya_nginx') # for 0.94 and higher #needs test
