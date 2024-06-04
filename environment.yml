@@ -1,17 +1,18 @@
-name: pyrpl
+name: pyrpl-env
+channels:
+  - conda-forge
 dependencies:
-- python=2.7
-- numpy
-- scipy
-- pandas
-- matplotlib
-- ipython
-- jupyter
-- paramiko
-- nose
-- pyqtgraph
-- pip
-- PyQt4
-- pip:
-    - scp
-    - ruamel.yaml
+  - numpy
+  - scipy
+  - paramiko
+  - pandas
+  - nose
+  - pip
+  - pyqt
+  - qtpy
+  - pyqtgraph
+  - pyyaml
+  - python=3.7
+  - ca-certificates
+  - openssl
+  - scp
