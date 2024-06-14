@@ -180,6 +180,7 @@ write_bitstream -force -bin_file -verbose $path_out/red_pitaya.bit
 set_property BITSTREAM.GENERAL.COMPRESS FALSE [current_design]
 write_bitstream -force $path_out/red_pitaya_uncompressed.bit
 write_cfgmem -force -format BIN -size 2 -interface SMAPx32 -disablebitswap -loadbit "up 0x0 $path_out/red_pitaya.bit" red_pitaya.bin
+report_utilization       -file    $path_out/final_util.rpt
 
 # write_bitstream -force -bin_file -verbose $path_out
 

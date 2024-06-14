@@ -566,38 +566,49 @@ assign sys_ack  [2       ] =  1'b1;
 //---------------------------------------------------------------------------------
 //  DSP module
 
-red_pitaya_dsp i_dsp (
-   // signals
-  .clk_i           (  adc_clk                    ),  // clock
-  .rstn_i          (  adc_rstn                   ),  // reset - active low
-  .dat_a_i         (  adc_a                      ),  // in 1
-  .dat_b_i         (  adc_b                      ),  // in 2
-  .dat_a_o         (  dac_a                      ),  // out 1
-  .dat_b_o         (  dac_b                      ),  // out 2
+// red_pitaya_dsp i_dsp (
+//    // signals
+//   .clk_i           (  adc_clk                    ),  // clock
+//   .rstn_i          (  adc_rstn                   ),  // reset - active low
+//   .dat_a_i         (  adc_a                      ),  // in 1
+//   .dat_b_i         (  adc_b                      ),  // in 2
+//   .dat_a_o         (  dac_a                      ),  // out 1
+//   .dat_b_o         (  dac_b                      ),  // out 2
   
-  .asg1_i          (  asg_a                  ),
-  .asg2_i          (  asg_b                  ),
-  .scope1_o        (  to_scope_a             ),
-  .scope2_o        (  to_scope_b             ),
-  .asg1phase_i     (  asg1phase_o            ),
+//   .asg1_i          (  asg_a                  ),
+//   .asg2_i          (  asg_b                  ),
+//   .scope1_o        (  to_scope_a             ),
+//   .scope2_o        (  to_scope_b             ),
+//   .asg1phase_i     (  asg1phase_o            ),
 
-  .pwm0            (  pwm_signals[0]         ),
-  .pwm1            (  pwm_signals[1]         ),
-  .pwm2            (  pwm_signals[2]         ),
-  .pwm3            (  pwm_signals[3]         ),
+//   .pwm0            (  pwm_signals[0]         ),
+//   .pwm1            (  pwm_signals[1]         ),
+//   .pwm2            (  pwm_signals[2]         ),
+//   .pwm3            (  pwm_signals[3]         ),
 
-  .trig_o          (  dsp_trigger            ),
+//   .trig_o          (  dsp_trigger            ),
 
-  // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[3]                 ),  // write enable
-  .sys_ren         (  sys_ren[3]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 3*32+31: 3*32]  ),  // read data
-  .sys_err         (  sys_err[3]                 ),  // error indicator
-  .sys_ack         (  sys_ack[3]                 )   // acknowledge signal
-);
+//   // System bus
+//   .sys_addr        (  sys_addr                   ),  // address
+//   .sys_wdata       (  sys_wdata                  ),  // write data
+//   .sys_sel         (  sys_sel                    ),  // write byte select
+//   .sys_wen         (  sys_wen[3]                 ),  // write enable
+//   .sys_ren         (  sys_ren[3]                 ),  // read enable
+//   .sys_rdata       (  sys_rdata[ 3*32+31: 3*32]  ),  // read data
+//   .sys_err         (  sys_err[3]                 ),  // error indicator
+//   .sys_ack         (  sys_ack[3]                 )   // acknowledge signal
+// );
+
+// Due to deactivating dsp module
+wire [14-1:0] to_scope_a;
+wire [14-1:0] to_scope_b;
+
+assign to_scope_a = adc_a;
+assign to_scope_b = adc_b;
+
+assign sys_rdata[3*32+:32] = 32'h0; 
+assign sys_err  [3       ] =  1'b0;
+assign sys_ack  [3       ] =  1'b1;
 
 // the ams module has been obsoleted by PWM control via DSP module (outputs)
 // and by the fact that RedPitaya has migrated aux. inputs to be PS controlled
@@ -607,35 +618,43 @@ red_pitaya_dsp i_dsp (
 //  Analog mixed signals
 //  XADC and slow PWM DAC control
 
-wire  [ 24-1: 0] pwm_cfg_a;
-wire  [ 24-1: 0] pwm_cfg_b;
-wire  [ 24-1: 0] pwm_cfg_c;
-wire  [ 24-1: 0] pwm_cfg_d;
+// wire  [ 24-1: 0] pwm_cfg_a;
+// wire  [ 24-1: 0] pwm_cfg_b;
+// wire  [ 24-1: 0] pwm_cfg_c;
+// wire  [ 24-1: 0] pwm_cfg_d;
 
-red_pitaya_ams i_ams (
-   // power test
-  .clk_i           (  adc_clk                    ),  // clock
-  .rstn_i          (  adc_rstn                   ),  // reset - active low
-  // PWM configuration
-  .dac_a_o         (  pwm_cfg_a                  ),
-  .dac_b_o         (  pwm_cfg_b                  ),
-  .dac_c_o         (  pwm_cfg_c                  ),
-  .dac_d_o         (  pwm_cfg_d                  ),
-  .pwm0_i 		   (  pwm_signals[0]             ),
-  .pwm1_i 		   (  pwm_signals[1]             ),
-   // System bus
-  .sys_addr        (  sys_addr                   ),  // address
-  .sys_wdata       (  sys_wdata                  ),  // write data
-  .sys_sel         (  sys_sel                    ),  // write byte select
-  .sys_wen         (  sys_wen[4]                 ),  // write enable
-  .sys_ren         (  sys_ren[4]                 ),  // read enable
-  .sys_rdata       (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
-  .sys_err         (  sys_err[4]                 ),  // error indicator
-  .sys_ack         (  sys_ack[4]                 )   // acknowledge signal
-);
+// red_pitaya_ams i_ams (
+//    // power test
+//   .clk_i           (  adc_clk                    ),  // clock
+//   .rstn_i          (  adc_rstn                   ),  // reset - active low
+//   // PWM configuration
+//   .dac_a_o         (  pwm_cfg_a                  ),
+//   .dac_b_o         (  pwm_cfg_b                  ),
+//   .dac_c_o         (  pwm_cfg_c                  ),
+//   .dac_d_o         (  pwm_cfg_d                  ),
+//   .pwm0_i 		   (  pwm_signals[0]             ),
+//   .pwm1_i 		   (  pwm_signals[1]             ),
+//    // System bus
+//   .sys_addr        (  sys_addr                   ),  // address
+//   .sys_wdata       (  sys_wdata                  ),  // write data
+//   .sys_sel         (  sys_sel                    ),  // write byte select
+//   .sys_wen         (  sys_wen[4]                 ),  // write enable
+//   .sys_ren         (  sys_ren[4]                 ),  // read enable
+//   .sys_rdata       (  sys_rdata[ 4*32+31: 4*32]  ),  // read data
+//   .sys_err         (  sys_err[4]                 ),  // error indicator
+//   .sys_ack         (  sys_ack[4]                 )   // acknowledge signal
+// );
 
 
 wire  [ 14-1: 0] pwm_signals[4-1:0];
+
+// Due to ams deactivation
+// assign asg_a = 14'sb0;
+// assign asg_b = 14'sb0;
+
+assign sys_rdata[4*32+:32] = 32'h0; 
+assign sys_err  [4       ] =  1'b0;
+assign sys_ack  [4       ] =  1'b1;
 
 // red_pitaya_pwm pwm [4-1:0] (
 //   // system signals
