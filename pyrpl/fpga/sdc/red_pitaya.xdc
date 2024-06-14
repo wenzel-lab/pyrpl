@@ -140,26 +140,39 @@ set_property PACKAGE_PIN K9  [get_ports {vinp_i[4]}]
 set_property PACKAGE_PIN L10 [get_ports {vinn_i[4]}]
 
 ### Expansion connector
-set_property IOSTANDARD LVCMOS33 [get_ports {DIO1_P}]
-set_property SLEW       FAST     [get_ports {DIO1_P}]
-set_property DRIVE      8        [get_ports {DIO1_P}]
-set_property PACKAGE_PIN H16     [get_ports {DIO1_P}]
+# S0 Mux Address
+set_property IOSTANDARD  LVCMOS33 [get_ports {DIO0_N}]
+set_property SLEW        FAST     [get_ports {DIO0_N}]
+set_property DRIVE       8        [get_ports {DIO0_N}]
+set_property PACKAGE_PIN G18      [get_ports {DIO0_N}]
 
+# S1 Mux Address
+set_property IOSTANDARD  LVCMOS33 [get_ports {DIO1_P}]
+set_property SLEW        FAST     [get_ports {DIO1_P}]
+set_property DRIVE       8        [get_ports {DIO1_P}]
+set_property PACKAGE_PIN H16      [get_ports {DIO1_P}]
 
-set_property IOSTANDARD LVCMOS33 [get_ports {DIO2_P}]
-set_property SLEW       FAST     [get_ports {DIO2_P}]
-set_property DRIVE      8        [get_ports {DIO2_P}]
-set_property PACKAGE_PIN J18     [get_ports {DIO2_P}]
+# S2 Mux Address
+set_property IOSTANDARD  LVCMOS33 [get_ports {DIO1_N}]
+set_property SLEW        FAST     [get_ports {DIO1_N}]
+set_property DRIVE       8        [get_ports {DIO1_N}]
+set_property PACKAGE_PIN H17      [get_ports {DIO1_N}]
 
-set_property IOSTANDARD LVCMOS33 [get_ports {DIO3_P}]
-set_property SLEW       FAST     [get_ports {DIO3_P}]
-set_property DRIVE      8        [get_ports {DIO3_P}]
-set_property PACKAGE_PIN K17     [get_ports {DIO3_P}]
+# fads trigger
+set_property IOSTANDARD  LVCMOS33 [get_ports {DIO2_P}]
+set_property SLEW        FAST     [get_ports {DIO2_P}]
+set_property DRIVE       8        [get_ports {DIO2_P}]
+set_property PACKAGE_PIN J18      [get_ports {DIO2_P}]
 
-set_property IOSTANDARD LVCMOS33 [get_ports {DIO4_P}]
-set_property SLEW       FAST     [get_ports {DIO4_P}]
-set_property DRIVE      8        [get_ports {DIO4_P}]
-set_property PACKAGE_PIN L14     [get_ports {DIO4_P}]
+# set_property IOSTANDARD LVCMOS33 [get_ports {DIO3_P}]
+# set_property SLEW       FAST     [get_ports {DIO3_P}]
+# set_property DRIVE      8        [get_ports {DIO3_P}]
+# set_property PACKAGE_PIN K17     [get_ports {DIO3_P}]
+
+# set_property IOSTANDARD LVCMOS33 [get_ports {DIO4_P}]
+# set_property SLEW       FAST     [get_ports {DIO4_P}]
+# set_property DRIVE      8        [get_ports {DIO4_P}]
+# set_property PACKAGE_PIN L14     [get_ports {DIO4_P}]
 # set_property IOSTANDARD LVCMOS33 [get_ports {exp_p_io[*]}]
 # set_property IOSTANDARD LVCMOS33 [get_ports {exp_n_io[*]}]
 # set_property SLEW       FAST     [get_ports {exp_p_io[*]}]

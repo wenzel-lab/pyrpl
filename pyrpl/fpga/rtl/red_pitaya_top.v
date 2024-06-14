@@ -81,66 +81,66 @@
  */
 
 module red_pitaya_top (
-   // PS connections
-   inout  [54-1: 0] FIXED_IO_mio       ,
-   inout            FIXED_IO_ps_clk    ,
-   inout            FIXED_IO_ps_porb   ,
-   inout            FIXED_IO_ps_srstb  ,
-   inout            FIXED_IO_ddr_vrn   ,
-   inout            FIXED_IO_ddr_vrp   ,
-   // DDR
-   inout  [15-1: 0] DDR_addr           ,
-   inout  [ 3-1: 0] DDR_ba             ,
-   inout            DDR_cas_n          ,
-   inout            DDR_ck_n           ,
-   inout            DDR_ck_p           ,
-   inout            DDR_cke            ,
-   inout            DDR_cs_n           ,
-   inout  [ 4-1: 0] DDR_dm             ,
-   inout  [32-1: 0] DDR_dq             ,
-   inout  [ 4-1: 0] DDR_dqs_n          ,
-   inout  [ 4-1: 0] DDR_dqs_p          ,
-   inout            DDR_odt            ,
-   inout            DDR_ras_n          ,
-   inout            DDR_reset_n        ,
-   inout            DDR_we_n           ,
+    // PS connections
+    inout  [54-1: 0] FIXED_IO_mio       ,
+    inout            FIXED_IO_ps_clk    ,
+    inout            FIXED_IO_ps_porb   ,
+    inout            FIXED_IO_ps_srstb  ,
+    inout            FIXED_IO_ddr_vrn   ,
+    inout            FIXED_IO_ddr_vrp   ,
+    // DDR
+    inout  [15-1: 0] DDR_addr           ,
+    inout  [ 3-1: 0] DDR_ba             ,
+    inout            DDR_cas_n          ,
+    inout            DDR_ck_n           ,
+    inout            DDR_ck_p           ,
+    inout            DDR_cke            ,
+    inout            DDR_cs_n           ,
+    inout  [ 4-1: 0] DDR_dm             ,
+    inout  [32-1: 0] DDR_dq             ,
+    inout  [ 4-1: 0] DDR_dqs_n          ,
+    inout  [ 4-1: 0] DDR_dqs_p          ,
+    inout            DDR_odt            ,
+    inout            DDR_ras_n          ,
+    inout            DDR_reset_n        ,
+    inout            DDR_we_n           ,
 
-   // Red Pitaya periphery
-  
-   // ADC
-   input  [16-1: 2] adc_dat_a_i        ,  // ADC CH1
-   input  [16-1: 2] adc_dat_b_i        ,  // ADC CH2
-   input            adc_clk_p_i        ,  // ADC data clock
-   input            adc_clk_n_i        ,  // ADC data clock
-   output [ 2-1: 0] adc_clk_o          ,  // optional ADC clock source
-   output           adc_cdcs_o         ,  // ADC clock duty cycle stabilizer
-   // DAC
-   output [14-1: 0] dac_dat_o          ,  // DAC combined data
-   output           dac_wrt_o          ,  // DAC write
-   output           dac_sel_o          ,  // DAC channel select
-   output           dac_clk_o          ,  // DAC clock
-   output           dac_rst_o          ,  // DAC reset
-   // PWM DAC
-  //  output [ 4-1: 0] dac_pwm_o          ,  // serial PWM DAC
-   // XADC
-   input  [ 5-1: 0] vinp_i             ,  // voltages p
-   input  [ 5-1: 0] vinn_i             ,  // voltages n
-   // Expansion connector
-   output           DIO1_P             ,  // fads trigger signal
-   
-   output           DIO2_P             ,  // address S0 MuxDAC Board Multiplexer
-   output           DIO3_P             ,  // address S1 MuxDAC Board Multiplexer
-   output           DIO4_P             ,  // address S2 MuxDAC Board Multiplexer
+    // Red Pitaya periphery
+    
+    // ADC
+    input  [16-1: 2] adc_dat_a_i        ,  // ADC CH1
+    input  [16-1: 2] adc_dat_b_i        ,  // ADC CH2
+    input            adc_clk_p_i        ,  // ADC data clock
+    input            adc_clk_n_i        ,  // ADC data clock
+    output [ 2-1: 0] adc_clk_o          ,  // optional ADC clock source
+    output           adc_cdcs_o         ,  // ADC clock duty cycle stabilizer
+    // DAC
+    output [14-1: 0] dac_dat_o          ,  // DAC combined data
+    output           dac_wrt_o          ,  // DAC write
+    output           dac_sel_o          ,  // DAC channel select
+    output           dac_clk_o          ,  // DAC clock
+    output           dac_rst_o          ,  // DAC reset
+    // PWM DAC
+    //  output [ 4-1: 0] dac_pwm_o          ,  // serial PWM DAC
+    // XADC
+    input  [ 5-1: 0] vinp_i             ,  // voltages p
+    input  [ 5-1: 0] vinn_i             ,  // voltages n
+    // Expansion connector
+    output           DIO2_P             ,  // fads trigger signal
+    
+    output           DIO0_N             ,  // address S0 MuxDAC Board Multiplexer
+    output           DIO1_P             ,  // address S1 MuxDAC Board Multiplexer
+    output           DIO1_N             ,  // address S2 MuxDAC Board Multiplexer
 
 //   inout  [ 8-1: 0] exp_p_io           ,
 //   inout  [ 8-1: 0] exp_n_io           ,
-   // SATA connector
-   output [ 2-1: 0] daisy_p_o          ,  // line 1 is clock capable
-   output [ 2-1: 0] daisy_n_o          ,
-   input  [ 2-1: 0] daisy_p_i          ,  // line 1 is clock capable
-   input  [ 2-1: 0] daisy_n_i          ,
-   // LED
-   output [ 8-1: 0] led_o       
+    // SATA connector
+    output [ 2-1: 0] daisy_p_o          ,  // line 1 is clock capable
+    output [ 2-1: 0] daisy_n_o          ,
+    input  [ 2-1: 0] daisy_p_i          ,  // line 1 is clock capable
+    input  [ 2-1: 0] daisy_n_i          ,
+    // LED
+    output [ 8-1: 0] led_o       
 );
 
 //---------------------------------------------------------------------------------
@@ -482,12 +482,12 @@ red_pitaya_scope i_scope (
 //    );
 
 wire sort_trig;
-assign DIO1_P = sort_trig;
+assign DIO2_P = sort_trig;
 
 wire [3-1: 0] mux_addr;
-assign DIO2_P = mux_addr[0];
-assign DIO3_P = mux_addr[1];
-assign DIO4_P = mux_addr[2];
+assign DIO0_N = mux_addr[0];
+assign DIO1_P = mux_addr[1];
+assign DIO1_N = mux_addr[2];
 
 wire [6-1: 0] muxing_channels;
 wire          signal_stable;

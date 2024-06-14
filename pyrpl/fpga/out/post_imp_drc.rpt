@@ -1,8 +1,8 @@
-Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
-| Tool Version : Vivado v.2023.2.2 (lin64) Build 4126759 Thu Feb  8 23:52:05 MST 2024
-| Date         : Tue Jun  4 00:19:50 2024
-| Host         : np-laptop-fw running 64-bit unknown
+| Tool Version : Vivado v.2023.2 (lin64) Build 4029153 Fri Oct 13 20:13:54 MDT 2023
+| Date         : Thu Jun  6 21:42:40 2024
+| Host         : np-desktop running 64-bit Pop!_OS 22.04 LTS
 | Command      : report_drc -file out/post_imp_drc.rpt
 | Design       : red_pitaya_top
 | Device       : xc7z010clg400-1
@@ -25,14 +25,13 @@ Table of Contents
            Ruledeck: default
              Max violations: <unlimited>
              Violations found: 152
-+-----------+----------+------------------------+------------+
-| Rule      | Severity | Description            | Violations |
-+-----------+----------+------------------------+------------+
-| DPIP-1    | Warning  | Input pipelining       | 69         |
-| DPOP-1    | Warning  | PREG Output pipelining | 38         |
-| DPOP-2    | Warning  | MREG Output pipelining | 44         |
-| RTSTAT-10 | Warning  | No routable loads      | 1          |
-+-----------+----------+------------------------+------------+
++--------+----------+------------------------+------------+
+| Rule   | Severity | Description            | Violations |
++--------+----------+------------------------+------------+
+| DPIP-1 | Warning  | Input pipelining       | 70         |
+| DPOP-1 | Warning  | PREG Output pipelining | 38         |
+| DPOP-2 | Warning  | MREG Output pipelining | 44         |
++--------+----------+------------------------+------------+
 
 2. REPORT DETAILS
 -----------------
@@ -379,6 +378,11 @@ Related violations: <none>
 DPIP-1#69 Warning
 Input pipelining  
 DSP i_dsp/genblk6[7].iq_2_outputs/modulator/secondproduct2 input i_dsp/genblk6[7].iq_2_outputs/modulator/secondproduct2/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-1#70 Warning
+Input pipelining  
+DSP i_dsp/genblk6[7].iq_2_outputs/modulator/secondproduct2 input i_dsp/genblk6[7].iq_2_outputs/modulator/secondproduct2/B[17:0] is not pipelined. Pipelining DSP48 input will improve performance.
 Related violations: <none>
 
 DPOP-1#1 Warning
@@ -789,11 +793,6 @@ Related violations: <none>
 DPOP-2#44 Warning
 MREG Output pipelining  
 DSP i_dsp/genblk6[7].iq_2_outputs/modulator/secondproduct2 multiplier stage i_dsp/genblk6[7].iq_2_outputs/modulator/secondproduct2/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
-Related violations: <none>
-
-RTSTAT-10#1 Warning
-No routable loads  
-1 net(s) have no routable loads. The problem bus(es) and/or net(s) are adc_rstn.
 Related violations: <none>
 
 
