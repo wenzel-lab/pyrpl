@@ -9,7 +9,8 @@
 //#include <termios.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <stdint.h>
+#include <inttypes.h>
+//#include <stdint.h>
 
 
 #define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
@@ -28,17 +29,21 @@
 void* map_base = (void*)(-1);
 
 int main(int argc, char **argv) {
+//    printf("DEBUG | Starting Logger\n");
     int fd = -1;
-    int ret_val = EXIT_SUCCESS;
+    int ret_val = 0;
+
 
 //    uint32_t address_base =   0x40600110;
     uint32_t address_base =   0x40600000;
     uint32_t output_offset =  0x00000200;
+//    uint32_t output_offset =  0x00000300;
 //    uint32_t address_base =   0x40110000;
 //    uint32_t buffer_offset =  0x00010000;
 //    uint32_t wp_address =     0x1000;
 //    uint32_t buf_tail = 0x0;
 //    uint32_t address;
+
     uint32_t output[N_OUTPUT_PARAMETERS];
     double intensity;
     double width;
@@ -48,18 +53,22 @@ int main(int argc, char **argv) {
 //    uint32_t n_buffer_filled;
 
     if((fd = open("/dev/mem", O_RDONLY)) == -1) FATAL;
+//    printf("DEBUG | Mapping Memory\n");
     map_base = mmap(0, MAP_SIZE, PROT_READ, MAP_SHARED, fd, address_base & ~MAP_MASK);
     if(map_base == (void *) -1) FATAL;
 
     int i;
+//    printf("DEBUG | Memory Mapped\n");
 
 //    FILE *fp;
 //    fp = fopen("test.log", "w");
+//    printf("DEBUG | Starting Logging\n");
 
     while (1==1) {
         for ( i = 0; i < N_OUTPUT_PARAMETERS; ++i) {
             void* virt_addr = map_base + ((address_base + output_offset + (i * address_alignment)) & MAP_MASK);
-            output[i] = *((uint32_t *) virt_addr);
+            output[i] = *((volatile uint32_t *) virt_addr);
+//            printf("DEBUG | %d %" PRIu32 "\n", i, output[i]);
         }
 
         intensity = (int32_t) output[1] * INTENSITY_MAX_FACTOR;
@@ -68,6 +77,10 @@ int main(int argc, char **argv) {
         if (last_id != output[0]) {
 //            fprintf(fp, "%12u\t%12f\t%12d\n", output[0], (double) (output[1] * INTENSITY_MAX_FACTOR) / , output[2]);
             printf("%12u\t%12d\t%f\t%12u\t%f\t%3u\t%12u\n", output[0], output[1], intensity, output[2], width, output[3], output[4]);
+//            printf("%12u\t%12d\t%12u\t%3u\t%12u\t%12u\n", output[0], output[1], output[2], output[3], output[4], output[5]);
+//            printf("DEBUG | ID %" PRIu32 "\tIntensity %" PRIu32 "\tWidth %" PRIu32 "\tClassification %" PRIu32 "\tTime %" PRIu32 "\n", output[0]);
+//            printf("DEBUG | ID %\tIntensity %\tWidth %\tClassification %\tTime %" PRIu32 PRIu32 PRIu32 PRIu32 PRIu32 "\n", output[0]);
+//            printf("DEBUG | TIME %" PRIu32 "\n", output[4]);
         }
 
         last_id = output[0];
