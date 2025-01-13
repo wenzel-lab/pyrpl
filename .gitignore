@@ -132,3 +132,5 @@ pyrpl/fpga/ip/
 pyrpl/fpga/out
 
 vivado*
+/pyrpl
+.DS_Store
