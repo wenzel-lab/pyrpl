@@ -48,9 +48,10 @@ typedef struct spi_packet_s{
     int value;
 } spi_packet;
 
+/* packet.address is the channel number for which to set the bias voltage, and package.value is the voltage up to the maximum =1023 */
 static bool is_spi_packet_valid(spi_packet spi_packet){
     if(spi_packet.address < 1 || spi_packet.address > 6){
-        return true;
+        return true; 
     }
     if(spi_packet.value < 0 || spi_packet.value > 1023){
         return false;
