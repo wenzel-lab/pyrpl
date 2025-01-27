@@ -16,15 +16,11 @@ module red_pitaya_fads #(
     parameter MEM = 32,     // data width RAM
     parameter CHNL = 6,     // maximum number of detectors/channels
     parameter ALIG = 4'h4   // RAM alignment
-//    parameter BUFL = (1<<RSZ)   // fads logger buffer length
-//    parameter BUFL = 8'h10   // fads logger buffer length
-//    parameter BUFL = 4   // fads logger buffer length
 )(
     // ADC
     input                   adc_clk_i           ,   // ADC clock
     input                   adc_rstn_i          ,   // ADC reset - active low
     input signed [14-1: 0]  adc_a_i             ,   // ADC data Channel A - the multiplexer input
-//    input       [ 14-1: 0]  adc_b_i         ,   // ADC data Channel B
     input        [ 3-1: 0]  mux_addr_i          ,   // Current multiplexer address
     input                   signal_stable_i       ,   // Active high when multiplexer is settled and provides a stable signal
 
@@ -74,14 +70,6 @@ reg [4-1:0] state = 4'h0; // State of the state machine
 // TODO it is still desirable to add a function that remembers if within a given time
 // negative droplets preceded a positive one, to prevent contaminated sorting.
 
-// Voltage logger Array
-reg [MEM-1:0] logger_data [CHNL-1:0]; // Logger data for each channel
-reg [MEM-1:0] update_cycle = 0; // Update cycle to track completion of all active channels
-// Registers to accumulate ADC values and count samples
-reg signed [32-1:0] adc_accum [CHNL-1:0]; // Accumulators for ADC values
-reg [16-1:0] sample_count = 0; // Sample count
-reg [3-1:0] prev_mux_addr = 0; // Previous multiplexer address
-
 // Multi Channel registers and wires
 wire [CHNL-1:0] droplet_sensing_channel; // Channel for droplet sensing
 reg     [3-1:0] droplet_sensing_address; // Address for droplet sensing
@@ -126,8 +114,18 @@ reg         [MEM-1:0] signal_width              [CHNL-1:0]; // Signal width for 
 reg signed  [MEM-1:0] signal_area               [CHNL-1:0]; // Signal area for each channel
 reg signed  [DWT-1:0] signal_max                [CHNL-1:0]; // Signal max intensity for each channel
 
-// Registers to store ADC values for each channel
-reg signed [14-1:0] adc_values [CHNL-1:0];
+// Registers to store fast-changing ADC values for each channel
+reg signed [DWT-1:0] adc_values [CHNL-1:0];
+
+// Averaged Detector Voltage Array from ADC
+reg [DWT-1:0] temp_adc_data [CHNL-1:0]; // Temporary data array for each channel
+reg [DWT-1:0] cur_adc_data [CHNL-1:0]; // Output data array for each channel
+reg [MEM-1:0] update_cycle = 0; // Update cycle to track completion of all active channels
+// Registers to accumulate ADC values and count samples
+reg signed [MEM-1:0] adc_accum [CHNL-1:0]; // Accumulators for ADC values
+reg [16-1:0] sample_count = 0; // Sample count
+reg [3-1:0] prev_mux_addr = 0; // Previous multiplexer address
+
 
 // Assigning
 genvar i;
@@ -180,18 +178,19 @@ always @(posedge adc_clk_i) begin
         sample_count <= sample_count + 1;
     end
 end
-
-// Write averaged data to logger array on multiplexer address change
+// Write averaged detector voltage signal data (ADC) to array when the multiplexer address changes
 always @(posedge adc_clk_i) begin
     if (fads_reset || !adc_rstn_i) begin
         sample_count <= 0;
         adc_accum <= '{default: 0};
         prev_mux_addr <= 0;
         update_cycle <= 0;
+        cur_adc_data <= '{default: 0}; // Reset output ADC data
+        temp_adc_data <= '{default: 0}; // Reset temporary ADC data
     end else if (mux_addr_i != prev_mux_addr) begin
         if (sample_count > 0) begin
-            // Write the averaged value to the logger array for the current channel
-            logger_data[prev_mux_addr] <= adc_accum[prev_mux_addr] / sample_count;
+            // Write the averaged value to the temporary ADC array for the current channel
+            temp_adc_data[prev_mux_addr] <= adc_accum[prev_mux_addr] / sample_count;
         end
         sample_count <= 0;
         adc_accum <= '{default: 0};
@@ -200,6 +199,7 @@ always @(posedge adc_clk_i) begin
         // Check if all active channels have been updated
         if (mux_addr_i == (CHNL-1)) begin
             update_cycle <= update_cycle + 1; // Increment the update cycle
+            cur_adc_data <= temp_adc_data; // Update the output ADC data
         end
     end
 end
@@ -230,11 +230,6 @@ always @(posedge adc_clk_i) begin
                 signal_max <= '{default: -14'sd8192};
 
             end else begin
-                // for (i=0; i<BUFL; i=i+1) begin
-                //     logger_data_buf[i] <= 0;
-                // end
-
-                // logger_wp <= {BUFL{1'b0}};
 
                 if (droplet_acquisition_enable) begin
                     state <= 4'h1;
@@ -376,18 +371,6 @@ always @(posedge adc_clk_i) begin
                     state <= 4'h1;
                 end
             end
-                //     sort_trig <= 1'b0;
-                //     state <= 4'h1;
-            // if (sort_counter < sort_duration) begin
-            //     sort_counter <= sort_counter + 32'd1;
-            //     sort_trig <= 1'b1;
-
-        //     if (fads_reset)
-        //         state <= 4'h0;
-        // end else begin
-        //     sort_trig <= 1'b0;
-        //     state <= 4'h1;
-        // end
         end
         default: debug <= 8'b11111111;
     endcase
@@ -574,13 +557,10 @@ always @(posedge adc_clk_i)
             20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               sort_delay}     ; end
             20'h00028: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},            sort_duration}     ; end
 
-
 //            20'h00100: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},   low_intensity_droplets}     ; end
 //            20'h00104: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},  high_intensity_droplets}     ; end
-
 //            20'h00108: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},           short_droplets}     ; end
 //            20'h0010c: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},            long_droplets}     ; end
-
 //            20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
 
             20'h00200: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},               droplet_id}    ; end // unique droplet identifier of the last fully analysed droplet
@@ -620,13 +600,13 @@ always @(posedge adc_clk_i)
             20'h0031C: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},            adc_values[4]}     ; end
             20'h00320: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},            adc_values[5]}     ; end
 
-            20'h10000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[0]}     ; end // Logger data for channel 0
-            20'h10004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[1]}     ; end // Logger data for channel 1
-            20'h10008: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[2]}     ; end // Logger data for channel 2
-            20'h1000C: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[3]}     ; end // ...
-            20'h10010: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[4]}     ; end
-            20'h10014: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[5]}     ; end
-            20'h10018: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},            update_cycle}      ; end // Update cycle
+            20'h10000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},          cur_adc_data[0]}     ; end // Averaged raw voltage data for channel 0 during one multiplexing recording cycle (changing at approx 200kHz)
+            20'h10004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},          cur_adc_data[1]}     ; end // Averaged raw voltage data for channel 1
+            20'h10008: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},          cur_adc_data[2]}     ; end // Averaged raw voltage data for channel 2
+            20'h1000C: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},          cur_adc_data[3]}     ; end // ...
+            20'h10010: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},          cur_adc_data[4]}     ; end
+            20'h10014: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},          cur_adc_data[5]}     ; end
+            20'h10018: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},             update_cycle}     ; end // Update cycle
 
 //            20'h10000: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd0}     ; end
 //            20'h10004: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd1}     ; end
