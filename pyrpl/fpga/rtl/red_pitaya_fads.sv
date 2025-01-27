@@ -5,8 +5,8 @@ General Description:
 
 Fluorescence activated droplet sorting (FADS) module for the RedPitaya.
 This module reads a fluorescence signal from the fast inputs and
-triggers a waveform on the arbitrary signal generator (ASG) to be amplified
-by an external high voltage amplifier to sort fluorescent droplets.
+triggers a pin to an external pulse signal generator and high voltage 
+amplifier to control electrodes-on-chips and sort fluorescent droplets.
 
 */
 
@@ -19,14 +19,12 @@ module red_pitaya_fads #(
 //    parameter BUFL = (1<<RSZ)   // fads logger buffer length
 //    parameter BUFL = 8'h10   // fads logger buffer length
 //    parameter BUFL = 4   // fads logger buffer length
-//    parameter signed low_threshold  = 14'b00000000001111,
-//    parameter signed high_threshold = 14'b00000011111111
 )(
     // ADC
     input                   adc_clk_i           ,   // ADC clock
     input                   adc_rstn_i          ,   // ADC reset - active low
-    input signed [14-1: 0]  adc_a_i             ,   // ADC data CHA
-//    input       [ 14-1: 0]  adc_b_i         ,   // ADC data CHB
+    input signed [14-1: 0]  adc_a_i             ,   // ADC data Channel A - the multiplexer input
+//    input       [ 14-1: 0]  adc_b_i         ,   // ADC data Channel B
     input        [ 3-1: 0]  mux_addr_i          ,   // Current multiplexer address
     input                   signal_stable_i       ,   // Active high when multiplexer is settled and provides a stable signal
 
@@ -45,148 +43,110 @@ module red_pitaya_fads #(
     output reg            sys_ack          // bus acknowledge signal
 );
 
-// // Registers for thresholds
-// // need to be signed for proper comparison with negative voltages
-// reg signed [DWT -1:0]   min_intensity_threshold;
-// reg signed [DWT -1:0]   low_intensity_threshold;
-// reg signed [DWT -1:0]  high_intensity_threshold;
-
-// reg [MEM -1:0]  min_width_threshold;
-// reg [MEM -1:0]  low_width_threshold;
-// reg [MEM -1:0] high_width_threshold;
-
 // Registers for timers
-// reg [MEM -1:0] droplet_width_counter = 32'd0;
-reg [MEM -1:0] general_timer_us = 32'd0;
-reg [8   -1:0] general_timer_counter = 8'd0;
-
-
-//// Registers for droplet counters;
-//reg [MEM -1:0]  low_intensity_droplets = 32'd0;
-//reg [MEM -1:0] high_intensity_droplets = 32'd0;
-
-//reg [MEM -1:0] short_droplets = 32'd0;
-//reg [MEM -1:0]  long_droplets = 32'd0;
-
-//reg [MEM -1:0] positive_droplets = 32'd0;
-//reg [MEM -1:0] negative_droplets = 32'd0;
+reg [MEM -1:0] general_timer_us = 32'd0; // General timer in microseconds
+reg [8   -1:0] general_timer_counter = 8'd0; // Counter for general timer
 
 // Output registers
-reg [MEM -1:0] droplet_id = 32'd0;
+reg         [MEM -1:0] droplet_id               = 32'd0;      // unique ID of the last fully evaluated droplet signal, stays stable until overwritten with the next event when its evaluation has finished
+reg signed  [MEM -1:0] cur_droplet_intensity    [CHNL-1:0];   // intensity peak value
+reg         [MEM -1:0] cur_droplet_width        [CHNL-1:0];   // peak width - full width at half maximum (fwhm)
+reg signed  [MEM -1:0] cur_droplet_area         [CHNL-1:0];   // area under the curve (auc)
 
-reg [MEM -1:0] cur_droplet_intensity = 32'd0;
-reg [MEM -1:0] cur_droplet_width = 32'd0;
-reg [MEM -1:0] cur_time_us = 32'd0;
-
-
-// State machine
-
-
-//reg      min_intensity_reg =  1'b0;
-//reg positive_intensity_reg =  1'b0;
-//reg     high_intensity_reg =  1'b0;
-
-// reg signed [DWT -1:0] droplet_intensity_max = {1'b1, {DWT-2{1'b0}}};
-
-
-//reg      min_width_reg = 1'b0;
-//reg      low_width_reg = 1'b0;
-//reg positive_width_reg = 1'b0;
-//reg     high_width_reg = 1'b0;
+reg         [MEM -1:0] cur_time_us              = 32'd0;      // output of time - changes rapidly
 
 // Eval
-wire droplet_positive;
-wire droplet_negative;
-reg [16 -1:0] droplet_classification;
+wire droplet_positive; // Indicates if the droplet is positive
+wire droplet_negative; // Indicates if the droplet is negative
+reg [16 -1:0] droplet_classification; // Classification of the droplet
 
 // Maintenance
-reg droplet_acquisition_enable = 1'b1;
-reg sort_enable = 1'b1;
-reg [MEM -1:0] sort_end_us = 32'd0;
-// reg [MEM -1:0] sort_counter = 32'd0;
-reg [MEM -1:0] sort_delay_end_us = 32'd0;
-// reg [MEM -1:0] sort_delay_counter = 32'd0;
-reg [MEM -1:0] sort_duration = 32'd50;
-reg [MEM -1:0] sort_delay = 32'd100;
-reg fads_reset = 1'b0;
+reg droplet_acquisition_enable = 1'b1; // Enable droplet acquisition
+reg sort_enable = 1'b1; // Enable sorting
+reg [MEM -1:0] sort_end_us = 32'd0; // End time for sorting in microseconds
+reg [MEM -1:0] sort_delay_end_us = 32'd0; // End time for sorting delay in microseconds
+reg [MEM -1:0] sort_duration = 32'd50; // Duration of sorting in microseconds
+reg [MEM -1:0] sort_delay = 32'd100; // Delay before sorting in microseconds
+reg fads_reset = 1'b0; // Reset signal for FADS
 
-reg [4-1:0] state = 4'h0;
+reg [4-1:0] state = 4'h0; // State of the state machine
 
+// TODO it is still desirable to add a function that remembers if within a given time
+// negative droplets preceded a positive one, to prevent contaminated sorting.
 
-// Logger Buffer
-//reg [20 -1:0] logger_wp_offset = 4'h1;
-//reg [BUFL-1:0] logger_wp = 4'h0;
-//reg [BUFL-1:0] logger_wp_cur = 4'h0;
-
-//reg [16 -1:0] logger_rp     = 16'b0;
-//reg [16 -1:0] buffer_length = 16'b1;
-
-//reg [MEM-1:0] logger_data_buf [BUFL-1:0];
-//reg [MEM-1:0] logger_data_buf [0:(1<<BUFL)-1];
-//reg [MEM-1:0] logger_data;
-//reg [BUFL-1:0] logger_raddr;
+// Voltage logger Array
+reg [MEM-1:0] logger_data [CHNL-1:0]; // Logger data for each channel
+reg [MEM-1:0] update_cycle = 0; // Update cycle to track completion of all active channels
+// Registers to accumulate ADC values and count samples
+reg signed [32-1:0] adc_accum [CHNL-1:0]; // Accumulators for ADC values
+reg [16-1:0] sample_count = 0; // Sample count
+reg [3-1:0] prev_mux_addr = 0; // Previous multiplexer address
 
 // Multi Channel registers and wires
-// Registers that need to be added to system bus
-wire [CHNL-1:0] droplet_sensing_channel;
-reg     [3-1:0] droplet_sensing_address;
+wire [CHNL-1:0] droplet_sensing_channel; // Channel for droplet sensing
+reg     [3-1:0] droplet_sensing_address; // Address for droplet sensing
 
-reg [CHNL-1:0] enabled_channels;
-assign droplet_sensing_channel = 6'b000001 << droplet_sensing_address;
+reg [CHNL-1:0] enabled_channels; // Enabled channels
+assign droplet_sensing_channel = 6'b000001 << droplet_sensing_address; // Assign droplet sensing channel
 
-
-// Intensity
+// Intensity (result of droplet classification) for all channels
 wire [CHNL-1:0]      min_intensity;
 wire [CHNL-1:0]      low_intensity;
 wire [CHNL-1:0] positive_intensity;
 wire [CHNL-1:0]     high_intensity;
 
-// Width
+// Width (result of droplet classification)
 wire [CHNL-1:0]      min_width;
 wire [CHNL-1:0]      low_width;
 wire [CHNL-1:0] positive_width;
 wire [CHNL-1:0]     high_width;
 
-// Area
+// Area (result of droplet classification)
 wire [CHNL-1:0]      min_area;
 wire [CHNL-1:0]      low_area;
 wire [CHNL-1:0] positive_area;
 wire [CHNL-1:0]     high_area;
 
-reg signed  [DWT-1:0]   min_intensity_threshold [CHNL-1:0];
-reg signed  [DWT-1:0]   low_intensity_threshold [CHNL-1:0];
-reg signed  [DWT-1:0]  high_intensity_threshold [CHNL-1:0];
+// Intensity thresholds for all channels
+reg signed  [DWT-1:0]   min_intensity_threshold [CHNL-1:0]; // noise cutoff threshold - from here on we evaluate and record
+reg signed  [DWT-1:0]   low_intensity_threshold [CHNL-1:0]; // min sorting threshold - below this value droplets are not sorted
+reg signed  [DWT-1:0]  high_intensity_threshold [CHNL-1:0]; // max sorting threshold - above this value droplets are not sorted
 
-reg         [MEM-1:0]       min_width_threshold [CHNL-1:0];
-reg         [MEM-1:0]       low_width_threshold [CHNL-1:0];
-reg         [MEM-1:0]      high_width_threshold [CHNL-1:0];
+// Width thresholds
+reg         [MEM-1:0]       min_width_threshold [CHNL-1:0]; // noise cutoff threshold
+reg         [MEM-1:0]       low_width_threshold [CHNL-1:0]; // min sorting threshold
+reg         [MEM-1:0]      high_width_threshold [CHNL-1:0]; // max sorting threshold
 
-reg         [MEM-1:0]        min_area_threshold [CHNL-1:0];
-reg         [MEM-1:0]        low_area_threshold [CHNL-1:0];
-reg         [MEM-1:0]       high_area_threshold [CHNL-1:0];
+// Area thresholds
+reg         [MEM-1:0]        min_area_threshold [CHNL-1:0]; // noise cutoff threshold
+reg         [MEM-1:0]        low_area_threshold [CHNL-1:0]; // min sorting threshold
+reg         [MEM-1:0]       high_area_threshold [CHNL-1:0]; // max sorting threshold
 
-reg         [MEM-1:0] signal_width              [CHNL-1:0];
-reg signed  [MEM-1:0] signal_area               [CHNL-1:0];
-reg signed  [DWT-1:0] signal_max                [CHNL-1:0];
+reg         [MEM-1:0] signal_width              [CHNL-1:0]; // Signal width for each channel
+reg signed  [MEM-1:0] signal_area               [CHNL-1:0]; // Signal area for each channel
+reg signed  [DWT-1:0] signal_max                [CHNL-1:0]; // Signal max intensity for each channel
 
+// Registers to store ADC values for each channel
+reg signed [14-1:0] adc_values [CHNL-1:0];
 
 // Assigning
 genvar i;
 generate
     for (i = 0; i < CHNL; i = i + 1) begin
-        
         // since min_intensity uses the current adc value, it is not something to be used in droplet evaluation (state >= 3)
-        assign      min_intensity[i] = (adc_a_i >= min_intensity_threshold[i]) && signal_stable_i && (mux_addr_i == i);
-
+        // Assign intensity thresholds
+        assign      min_intensity[i] = (adc_values[i] >= min_intensity_threshold[i]) && signal_stable_i && (mux_addr_i == i);
         assign      low_intensity[i] = (signal_max[i] >=   min_intensity_threshold[i]) && (signal_max[i] < low_intensity_threshold[i]);
         assign positive_intensity[i] = (signal_max[i] >=   low_intensity_threshold[i]) && (signal_max[i] < high_intensity_threshold[i]);
         assign     high_intensity[i] =  signal_max[i] >=  high_intensity_threshold[i];
 
+        // Assign area thresholds
         assign      min_area[i] =  signal_area[i] >=  min_area_threshold[i];
         assign      low_area[i] = (signal_area[i] >=  min_area_threshold[i]) && (signal_area[i] <  low_area_threshold[i]);
         assign positive_area[i] = (signal_area[i] >=  low_area_threshold[i]) && (signal_area[i] < high_area_threshold[i]) && min_area[i];
         assign     high_area[i] = (signal_area[i] >= high_area_threshold[i]) && min_area[i];
 
+        // Assign width thresholds
         assign      min_width[i] =  signal_width[i] >=  min_width_threshold[i];
         assign      low_width[i] = (signal_width[i] >=  min_width_threshold[i]) && (signal_width[i] <  low_width_threshold[i]);
         assign positive_width[i] = (signal_width[i] >=  low_width_threshold[i]) && (signal_width[i] < high_width_threshold[i]) && min_width[i];
@@ -194,17 +154,11 @@ generate
     end
 endgenerate
 
-
-// Final droplet sorging decision logic
+// Final droplet sorting decision logic
 assign droplet_positive = &positive_intensity && &positive_width;
 assign droplet_negative = (|low_intensity || |high_intensity || |positive_intensity) && (|low_width || |high_width || |positive_width) && (~(&positive_intensity && &positive_width));
 
-
-//integer i;
-//always @(posedge adc_clk_i) begin
-//    logger_wp_cur <= logger_wp;
-//end
-
+// General timer logic
 always @(posedge adc_clk_i) begin
     if (fads_reset) begin
         general_timer_counter <= 8'd0;
@@ -218,23 +172,39 @@ always @(posedge adc_clk_i) begin
     end
 end
 
+// Capture and accumulate ADC values for the active channel
+always @(posedge adc_clk_i) begin
+    if (signal_stable_i) begin
+        adc_values[mux_addr_i] <= adc_a_i;
+        adc_accum[mux_addr_i] <= adc_accum[mux_addr_i] + adc_a_i;
+        sample_count <= sample_count + 1;
+    end
+end
 
+// Write averaged data to logger array on multiplexer address change
+always @(posedge adc_clk_i) begin
+    if (fads_reset || !adc_rstn_i) begin
+        sample_count <= 0;
+        adc_accum <= '{default: 0};
+        prev_mux_addr <= 0;
+        update_cycle <= 0;
+    end else if (mux_addr_i != prev_mux_addr) begin
+        if (sample_count > 0) begin
+            // Write the averaged value to the logger array for the current channel
+            logger_data[prev_mux_addr] <= adc_accum[prev_mux_addr] / sample_count;
+        end
+        sample_count <= 0;
+        adc_accum <= '{default: 0};
+        prev_mux_addr <= mux_addr_i;
 
-// wire droplet_min;
-// assign droplet_min = adc_a_i >= -14'd250;
+        // Check if all active channels have been updated
+        if (mux_addr_i == (CHNL-1)) begin
+            update_cycle <= update_cycle + 1; // Increment the update cycle
+        end
+    end
+end
 
-// always @(posedge adc_clk_i) begin
-//     debug[0] <= droplet_min;
-//     debug[1] <= min_intensity[0];
-//     debug[2] <= min_intensity[1];
-//     debug[3] <= min_width[0];
-//     debug[4] <= min_width[1];
-//     debug[5] <= droplet_positive;
-//     debug[6] <= droplet_negative;
-//     debug[7] <= 1;
-// end
-
-
+// State machine for droplet sorting
 always @(posedge adc_clk_i) begin
     debug[6] <= droplet_negative;
     debug[7] <= droplet_positive;
@@ -249,27 +219,15 @@ always @(posedge adc_clk_i) begin
                 muxing_channels_o <= droplet_sensing_channel;
                 sort_trig <= 1'b0;
 
-//                negative_droplets       <= 32'd0;
-//                positive_droplets       <= 32'd0;
-
-//                low_intensity_droplets  <= 32'd0;
-//                high_intensity_droplets <= 32'd0;
-
-//                short_droplets          <= 32'd0;
-//                long_droplets           <= 32'd0;
-
                 droplet_id              <= 32'd0;
-                cur_droplet_intensity   <= 32'd0;
-                cur_droplet_width       <= 32'd0;
-                // droplet_width_counter   <= 32'd0;
-
+                cur_droplet_intensity   <= '{default: 32'd0}; // Reset all channels
+                cur_droplet_width       <= '{default: 32'd0}; // Reset all channels
+                cur_droplet_area        <= '{default: 32'd0}; // Reset all channels
                 droplet_classification  <=  8'd0;
 
-                
                 // initialize with the most negative number possible in 14 bit
                 // ADC input is signed, that is why 2-complement must be used
-                // signal_max <= '{CHNL{1'b1, {DWT-2{1'b0}}}};
-                signal_max <= '{CHNL{-14'sd8192}};
+                signal_max <= '{default: -14'sd8192};
 
             end else begin
                 // for (i=0; i<BUFL; i=i+1) begin
@@ -293,14 +251,13 @@ always @(posedge adc_clk_i) begin
                 muxing_channels_o <= droplet_sensing_channel;
                 if (signal_stable_i) begin
                     if (min_intensity[droplet_sensing_address]) begin
-                        signal_width <= '{CHNL{0}};
-                        signal_area  <= '{CHNL{0}};
-                        signal_max   <= '{CHNL{-14'sd8192}};
-                        
+                        signal_width <= '{default: 32'd0}; // Reset all channels
+                        signal_area  <= '{default: 32'd0}; // Reset all channels
+                        signal_max   <= '{default: -14'sd8192}; // Reset all channels
                         
                         signal_width[droplet_sensing_address] <= 32'd1;
-                        signal_area[droplet_sensing_address] <= signal_area[droplet_sensing_address] + adc_a_i;
-                        signal_max[droplet_sensing_address] <= adc_a_i;
+                        signal_area[droplet_sensing_address] <= signal_area[droplet_sensing_address] + adc_values[droplet_sensing_address];
+                        signal_max[droplet_sensing_address] <= adc_values[droplet_sensing_address];
 
                         state <= 4'h2;
                     end
@@ -317,8 +274,8 @@ always @(posedge adc_clk_i) begin
                 state <= 4'h0;
             else if (signal_stable_i) begin
                 // Intensity
-                if (adc_a_i > signal_max[mux_addr_i]) begin
-                    signal_max[mux_addr_i] <= adc_a_i;
+                if (adc_values[mux_addr_i] > signal_max[mux_addr_i]) begin
+                    signal_max[mux_addr_i] <= adc_values[mux_addr_i];
                 end
 
                 // Width
@@ -328,7 +285,7 @@ always @(posedge adc_clk_i) begin
                 end
 
                 // TODO Area
-                signal_area[mux_addr_i] <= signal_area[mux_addr_i] + adc_a_i;
+                signal_area[mux_addr_i] <= signal_area[mux_addr_i] + adc_values[mux_addr_i];
 
                 // State transition
                 // Simple state transition if signal is below min intensity
@@ -343,52 +300,6 @@ always @(posedge adc_clk_i) begin
 
         // Evaluating Droplet | 3
         4'h3 : begin
-/* 
-//             // TODO evaluate droplet counter necessity
-//             // Update droplet counters
-//             if (droplet_positive) begin
-// //                positive_droplets <= positive_droplets + 32'd1;
-//                 droplet_classification[7] <= 1;
-// //            end else begin
-// //                if (droplet_negative)
-// ////                    negative_droplets <= negative_droplets + 32'd1;
-//             end
-
-//             if (low_intensity) begin
-// //                low_intensity_droplets <= low_intensity_droplets + 32'd1;
-//                 droplet_classification[0] <= 1;
-//             end
-
-//             if (positive_intensity)
-//                 droplet_classification[1] <= 1;
-
-//             if (high_intensity) begin
-// //                high_intensity_droplets <= high_intensity_droplets + 32'd1;
-//                 droplet_classification[2] <= 1;
-//             end
-
-//             if (low_width) begin
-// //                short_droplets <= short_droplets + 32'd1;
-//                 droplet_classification[3] <= 1;
-//             end
-
-//             if (positive_width)
-//                 droplet_classification[4] <= 1;
-
-//             if (high_width) begin
-// //                long_droplets <= long_droplets + 32'd1;
-//                 droplet_classification[5] <= 1;
-//             end
-
-            // Logging
-            // getting log data
-    //        logger_data_buf[logger_wp] <= positive_droplets + negative_droplets;
-            // incrementing write pointer
-    //        logger_wp <= (logger_wp + ALIG) % BUFL;
-    //        logger_wp <= logger_wp + 4'b0001;
-    //        logger_wp <= logger_wp + 1; 
-*/
-
             
             // State transition
             if (fads_reset || !adc_rstn_i)
@@ -400,8 +311,11 @@ always @(posedge adc_clk_i) begin
                 // Update output
                 if (droplet_positive || droplet_negative) begin
                     droplet_id <= droplet_id + 32'd1;
-                    cur_droplet_width[0] <= signal_width[0];
-                    cur_droplet_intensity[0] <= signal_max[0];
+                    for (i = 0; i < CHNL; i = i + 1) begin
+                        cur_droplet_width[i] <= signal_width[i]; // cur_droplet_width gets value from signal_width
+                        cur_droplet_intensity[i] <= signal_max[i]; // cur_droplet_intensity gets value from signal_max
+                        cur_droplet_area[i] <= signal_area[i]; // cur_droplet_area gets value from signal_area
+                    end
                     cur_time_us <= general_timer_us;
     
                     droplet_classification[ 0] <= | low_intensity;
@@ -415,9 +329,6 @@ always @(posedge adc_clk_i) begin
                     droplet_classification[ 6] <= | low_area;
                     droplet_classification[ 7] <= & positive_area;
                     droplet_classification[ 8] <= | high_area;
-                    // droplet_classification[ 6] <= 1'b0;
-                    // droplet_classification[ 7] <= 1'b0;
-                    // droplet_classification[ 8] <= 1'b0;
     
                     droplet_classification[ 9] <= 1'b0;
                     droplet_classification[10] <= 1'b0;
@@ -429,9 +340,7 @@ always @(posedge adc_clk_i) begin
                     droplet_classification[15] <= droplet_positive;
                 end
                 if (sort_enable && droplet_positive) begin
-                    // sort_counter <= 32'd0;
                     sort_delay_end_us <= general_timer_us + sort_delay;
-                    // sort_delay_counter <= 32'd0;
                     state <= 4'h4;
                 end else begin
                     state <= 4'h1;
@@ -447,10 +356,6 @@ always @(posedge adc_clk_i) begin
             else if (general_timer_us >= sort_delay_end_us) begin
                 debug <= 6'b010000;
                 muxing_channels_o <= droplet_sensing_channel;
-
-            // if (sort_delay_counter < sort_delay) begin
-            //     sort_delay_counter <= sort_delay_counter + 32'd1;
-            // end else begin
 
                 sort_end_us <= general_timer_us + sort_duration;
                 state <= 4'h5;
@@ -487,38 +392,9 @@ always @(posedge adc_clk_i) begin
         default: debug <= 8'b11111111;
     endcase
 end
-//
-//always @(posedge adc_clk_i) begin
-//    if (sys_addr[19:0] == {logger_wp_offset, logger_wp}) begin
-//        sys_ack <= sys_en;
-//        sys_rdata <= {{32- MEM{1'b0}}, logger_data};
-//
-//    end
-//end
-
-//always @(posedge adc_clk_i) begin
-//   logger_raddr   <= sys_addr[BUFL+1:2] ; // address synchronous to clock
-//   logger_data    <= logger_data_buf[logger_raddr] ;
-//end
-
-//always @(posedge adc_clk_i) begin
-//    logger_raddr <= sys_addr[
-//end
-
-// wire [3-1:0] mux_addr;
-// always @(posedge adc_clk_i) begin
-//     mux_addr_o <= mux_addr;
-// end
-
-// red_pitaya_mux i_mux(
-//   .adc_clk_i            ( adc_clk_i        ),
-//   .adc_rstn_i           ( adc_rstn_i       ),
-//   .active_channels_i    ( enabled_channels  ),
-//   .mux_addr_o           ( mux_addr_o       )
-//   );
 
 // System bus
-// setting up necessary wires
+// Setting up necessary wires
 wire sys_en;
 assign sys_en = sys_wen | sys_ren;
 
@@ -526,33 +402,27 @@ assign sys_en = sys_wen | sys_ren;
 always @(posedge adc_clk_i)
     // Necessary handling of reset signal
     if (adc_rstn_i == 1'b0) begin
-        // resetting to default values
+        // Resetting to default values
+        min_intensity_threshold  <= '{CHNL{-14'sd175}}; // Should roughly correspond to -0.5V
+        low_intensity_threshold  <= '{CHNL{-14'sd150}}; // On the specific RedPitaya I'm testing on
+        high_intensity_threshold  <= '{CHNL{ 14'sd900}};
 
-        //  min_intensity_threshold[k]  <= 14'b11111111111111;
-        //  low_intensity_threshold[k]  <= 14'b11111111111110;
-        // high_intensity_threshold[k]  <= 14'b10000011111111;
+        min_width_threshold  <= '{CHNL{32'h00000001}};
+        low_width_threshold  <= '{CHNL{32'h000000ff}};
+        high_width_threshold  <= '{CHNL{32'hccddeeff}};
 
-            min_intensity_threshold  <= '{CHNL{-14'sd175}}; // should roughly correspond to -0.5V
-            low_intensity_threshold  <= '{CHNL{-14'sd150}}; // on the specific redpitaya I'm testing on
-           high_intensity_threshold  <= '{CHNL{ 14'sd900}};
-
-                min_width_threshold  <= '{CHNL{32'h00000001}};
-                low_width_threshold  <= '{CHNL{32'h000000ff}};
-               high_width_threshold  <= '{CHNL{32'hccddeeff}};
-
-                 min_area_threshold  <= '{CHNL{32'h00000001}};
-                 low_area_threshold  <= '{CHNL{32'h000000ff}};
-                high_area_threshold  <= '{CHNL{32'hccddeeff}};
+        min_area_threshold  <= '{CHNL{32'h00000001}};
+        low_area_threshold  <= '{CHNL{32'h000000ff}};
+        high_area_threshold  <= '{CHNL{32'hccddeeff}};
                
-               enabled_channels <= 6'b000011;
-               droplet_sensing_address <= 3'h0;
+        enabled_channels <= 6'b000011;
+        droplet_sensing_address <= 3'h0;
 
     end else if (sys_wen) begin
+        // Writing to system bus
         if (sys_addr[19:0]==20'h00020)                 fads_reset       <= sys_wdata[MEM-1:0];
-
         if (sys_addr[19:0]==20'h00024)                 sort_delay       <= sys_wdata[MEM-1:0];
         if (sys_addr[19:0]==20'h00028)              sort_duration       <= sys_wdata[MEM-1:0];
-
         if (sys_addr[19:0]==20'h00300)              enabled_channels    <= sys_wdata[CHNL-1:0];
         if (sys_addr[19:0]==20'h00304)       droplet_sensing_address    <= sys_wdata[   3-1:0];
 
@@ -633,7 +503,7 @@ always @(posedge adc_clk_i)
         sys_err <= 1'b0;
         casez (sys_addr[19:0])
         //   Address  |       handling bus signals        | creating 32 bit wide word containing the data
-            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[0]}  ; end
+            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[0]}  ; end // these inputs are written back to the system bus as standard procedure in FPGA development
             20'h01004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[1]}  ; end
             20'h01008: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[2]}  ; end
             20'h0100c: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},  min_intensity_threshold[3]}  ; end
@@ -699,7 +569,7 @@ always @(posedge adc_clk_i)
             20'h01114: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},      high_area_threshold[5]}  ; end
 
 
-            20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               fads_reset}     ; end
+            20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               fads_reset}     ; end // used for trouble shooting and in the interface to reset sorter and values including droplet id
 
             20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               sort_delay}     ; end
             20'h00028: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},            sort_duration}     ; end
@@ -713,20 +583,50 @@ always @(posedge adc_clk_i)
 
 //            20'h00110: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        positive_droplets}     ; end
 
-            20'h00200: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},               droplet_id}     ; end
-            20'h00204: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity}     ; end
-            20'h00208: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width}     ; end
-            20'h0020c: begin sys_ack <= sys_en;  sys_rdata <= {{32-  16{1'b0}},   droplet_classification}     ; end
-            20'h00210: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              cur_time_us}     ; end
+            20'h00200: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},               droplet_id}    ; end // unique droplet identifier of the last fully analysed droplet
+            
+            20'h00204: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity[0]} ; end // output of the droplet sorter for each channel
+            20'h00208: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity[1]} ; end
+            20'h0020C: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity[2]} ; end
+            20'h00210: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity[3]} ; end
+            20'h00214: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity[4]} ; end
+            20'h00218: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},    cur_droplet_intensity[5]} ; end
 
-            20'h00300: begin sys_ack <= sys_en;  sys_rdata <= {{32-CHNL{1'b0}},         enabled_channels}     ; end
-            20'h00304: begin sys_ack <= sys_en;  sys_rdata <= {{32-   3{1'b0}},  droplet_sensing_address}     ; end
-            20'h00308: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},                  adc_a_i}     ; end
+            20'h0021C: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width[0]} ; end
+            20'h00220: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width[1]} ; end
+            20'h00224: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width[2]} ; end
+            20'h00228: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width[3]} ; end
+            20'h0022C: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width[4]} ; end
+            20'h00230: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},        cur_droplet_width[5]} ; end
 
-//            20'h01000: begin sys_ack <= sys_en;  sys_rdata <= {{32-BUFL{1'b0}},            logger_wp_cur}     ; end
+            20'h00234: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},          cur_droplet_area[0]} ; end
+            20'h00238: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},          cur_droplet_area[1]} ; end
+            20'h0023C: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},          cur_droplet_area[2]} ; end
+            20'h00240: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},          cur_droplet_area[3]} ; end
+            20'h00244: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},          cur_droplet_area[4]} ; end
+            20'h00248: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},          cur_droplet_area[5]} ; end
 
-//            20'h100??: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              logger_data}     ; end
+            20'h0024C: begin sys_ack <= sys_en;  sys_rdata <= {{32-  16{1'b0}},   droplet_classification}     ; end // results of the state machine droplet classification
+            20'h00250: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},              cur_time_us}     ; end // real time value fast changing
 
+            20'h00300: begin sys_ack <= sys_en;  sys_rdata <= {{32-CHNL{1'b0}},         enabled_channels}     ; end // bolean, starting with channel one as the digit (0/1) on the right
+            20'h00304: begin sys_ack <= sys_en;  sys_rdata <= {{32-   3{1'b0}},  droplet_sensing_address}     ; end // number 0-5 this indicates the master channel which should be seleced to have a homogenious, droplet-wide fluorescence signal, not beads or cells. It's used to define where droplets start and finish across channels 
+
+            20'h00308: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},                  adc_a_i}     ; end // real time value fast changing
+            20'h0030C: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},            adc_values[0]}     ; end // ADC value for each channel seperately (only one active at a time during multiplexing)
+            20'h00310: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},            adc_values[1]}     ; end
+            20'h00314: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},            adc_values[2]}     ; end
+            20'h00318: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},            adc_values[3]}     ; end
+            20'h0031C: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},            adc_values[4]}     ; end
+            20'h00320: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},            adc_values[5]}     ; end
+
+            20'h10000: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[0]}     ; end // Logger data for channel 0
+            20'h10004: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[1]}     ; end // Logger data for channel 1
+            20'h10008: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[2]}     ; end // Logger data for channel 2
+            20'h1000C: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[3]}     ; end // ...
+            20'h10010: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[4]}     ; end
+            20'h10014: begin sys_ack <= sys_en;  sys_rdata <= {{32- DWT{1'b0}},           logger_data[5]}     ; end
+            20'h10018: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},            update_cycle}      ; end // Update cycle
 
 //            20'h10000: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd0}     ; end
 //            20'h10004: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},                    32'd1}     ; end
