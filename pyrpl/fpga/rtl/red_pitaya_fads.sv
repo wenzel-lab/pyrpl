@@ -51,6 +51,8 @@ reg signed  [MEM -1:0] cur_droplet_area         [CHNL-1:0];   // area under the 
 
 reg         [MEM -1:0] cur_time_us              = 32'd0;      // output of time - changes rapidly
 
+reg         [MEM -1:0] signal_duration          = 32'd0;      // output of time - changes rapidly
+
 // Eval
 wire droplet_positive; // Indicates if the droplet is positive
 wire droplet_negative; // Indicates if the droplet is negative
@@ -118,8 +120,8 @@ reg signed  [DWT-1:0] signal_max                [CHNL-1:0]; // Signal max intens
 reg signed [DWT-1:0] adc_values [CHNL-1:0];
 
 // Averaged Detector Voltage Array from ADC
-reg [DWT-1:0] temp_adc_data [CHNL-1:0]; // Temporary data array for each channel
-reg [DWT-1:0] cur_adc_data [CHNL-1:0]; // Output data array for each channel
+reg signed [DWT-1:0] temp_adc_data [CHNL-1:0]; // Temporary data array for each channel
+reg signed [DWT-1:0] cur_adc_data [CHNL-1:0]; // Output data array for each channel
 reg [MEM-1:0] update_cycle = 0; // Update cycle to track completion of all active channels
 // Registers to accumulate ADC values and count samples
 reg signed [MEM-1:0] adc_accum [CHNL-1:0]; // Accumulators for ADC values
@@ -306,7 +308,7 @@ always @(posedge adc_clk_i) begin
                 // Update output
                 if (droplet_positive || droplet_negative) begin
                     droplet_id <= droplet_id + 32'd1;
-                    for (i = 0; i < CHNL; i = i + 1) begin
+                    for (integer i = 0; i < CHNL; i = i + 1) begin
                         cur_droplet_width[i] <= signal_width[i]; // cur_droplet_width gets value from signal_width
                         cur_droplet_intensity[i] <= signal_max[i]; // cur_droplet_intensity gets value from signal_max
                         cur_droplet_area[i] <= signal_area[i]; // cur_droplet_area gets value from signal_area
@@ -406,6 +408,7 @@ always @(posedge adc_clk_i)
         if (sys_addr[19:0]==20'h00020)                 fads_reset       <= sys_wdata[MEM-1:0];
         if (sys_addr[19:0]==20'h00024)                 sort_delay       <= sys_wdata[MEM-1:0];
         if (sys_addr[19:0]==20'h00028)              sort_duration       <= sys_wdata[MEM-1:0];
+        if (sys_addr[19:0]==20'h00100)              signal_duration     <= sys_wdata[MEM-1:0];
         if (sys_addr[19:0]==20'h00300)              enabled_channels    <= sys_wdata[CHNL-1:0];
         if (sys_addr[19:0]==20'h00304)       droplet_sensing_address    <= sys_wdata[   3-1:0];
 
@@ -554,9 +557,11 @@ always @(posedge adc_clk_i)
 
             20'h00020: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               fads_reset}     ; end // used for trouble shooting and in the interface to reset sorter and values including droplet id
 
-            20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},               sort_delay}     ; end
-            20'h00028: begin sys_ack <= sys_en;  sys_rdata <= {{32-   1{1'b0}},            sort_duration}     ; end
-
+            20'h00024: begin sys_ack <= sys_en;  sys_rdata <= {{32-   MEM{1'b0}},               sort_delay}     ; end
+            20'h00028: begin sys_ack <= sys_en;  sys_rdata <= {{32-   MEM{1'b0}},            sort_duration}     ; end
+            20'h00100: begin sys_ack <= sys_en;  sys_rdata <= {{32-   MEM{1'b0}},          signal_duration}     ; end
+            20'h00104: begin sys_ack <= sys_en;  sys_rdata <= {{32-   3{1'b0}},            mux_addr_i}     ; end
+            20'h00108: begin sys_ack <= sys_en;  sys_rdata <= {{32-   CHNL{1'b0}},            muxing_channels_o}    ; end
 //            20'h00100: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},   low_intensity_droplets}     ; end
 //            20'h00104: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},  high_intensity_droplets}     ; end
 //            20'h00108: begin sys_ack <= sys_en;  sys_rdata <= {{32- MEM{1'b0}},           short_droplets}     ; end

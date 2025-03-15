@@ -1,8 +1,8 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2023.2 (lin64) Build 4029153 Fri Oct 13 20:13:54 MDT 2023
-| Date         : Fri Jun 14 16:07:25 2024
-| Host         : np-desktop running 64-bit Pop!_OS 22.04 LTS
+| Date         : Sat Feb  1 08:50:57 2025
+| Host         : wenzel-omen running 64-bit Ubuntu 24.04.1 LTS
 | Command      : report_drc -file out/post_imp_drc.rpt
 | Design       : red_pitaya_top
 | Device       : xc7z010clg400-1
